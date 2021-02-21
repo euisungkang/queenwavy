@@ -9,7 +9,7 @@ client.on('ready', () => {
 
 client.on('message', message => {
 
-    let channel = client.channels.find(channel => channel.name === 'general')
+    let channel = client.channels.find(channel => channel.id === '813017396553449472')
 
     if (message.content == '#ping') {
        channel.send('pong');
