@@ -12,19 +12,19 @@ client.on('ready', () => {
 
  
 
-client.on('message', message => {
+// client.on('message', message => {
 
-    if (message.content == '#ping') {
-       message.channel.send('pong');
-    }
-    else if (message.content == '#pong') {
-        message.channel.send('ping');
-    }
-    else if (message.content == '#introduce') {
-        message.channel.send('Wear a Mask, Stay Safe')
-    }
+//     if (message.content == '#ping') {
+//        message.channel.send('pong');
+//     }
+//     else if (message.content == '#pong') {
+//         message.channel.send('ping');
+//     }
+//     else if (message.content == '#introduce') {
+//         message.channel.send('Wear a Mask, Stay Safe')
+//     }
 
-});
+// });
  
 
 // THIS  MUST  BE  THIS  WAY
