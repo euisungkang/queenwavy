@@ -58,9 +58,8 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
     let oldUserChannel = oldMember.channel;
     let newUserChannel = newMember.channel;
 
-
     // If user enters a channel for the first time
-    if (oldUserChannel === null && newUserChannel != null) {
+    if (oldUserChannel === null && newUserChannel != null && !(await isBot(id))) {
 
         // Category ID of arcade: 687839393444397111
         if (await channelIsValid(newUserChannel)) {
@@ -69,13 +68,13 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
         }
 
     // If user exits channels
-    } else if (oldUserChannel != null && newUserChannel === null) {
+    } else if (oldUserChannel != null && newUserChannel === null && !(await isBot(id))) {
         if (await channelIsValid(oldUserChannel)) {   
             calculateTimeSpent(oldMember, id)
         }
 
     // Moving between channels
-    } else if (oldUserChannel != null && newUserChannel != null) {
+    } else if (oldUserChannel != null && newUserChannel != null && !(await isBot(id))) {
         //console.log("moving")
 
         // Category ID of arcade: 687839393444397111
@@ -92,6 +91,11 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
     
     }
 });
+
+async function isBot(id) {
+    let user = await client.users.fetch(id)
+    return user.bot
+}
 
 async function channelIsValid(channel) {
     // Arcade: 687839393444397111
