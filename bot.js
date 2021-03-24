@@ -42,10 +42,10 @@ client.on('message', async message => {
             var today = new Date();
 
             var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-            var time = today.getHours() + ":" + today.getMinutes();
+            //var time = today.getHours() + ":" + today.getMinutes();
 
 
-            message.author.send("Time: " + date + ", " + time + ". You currently have " + res + " <:HentaiCoin:814968693981184030>");
+            message.author.send("Date: " + date + ". You currently have " + res + " <:HentaiCoin:814968693981184030>");
         })
         message.delete();
     }
@@ -75,7 +75,7 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
 
     // Moving between channels
     } else if (oldUserChannel != null && newUserChannel != null) {
-        console.log("moving")
+        //console.log("moving")
 
         // Category ID of arcade: 687839393444397111
 
