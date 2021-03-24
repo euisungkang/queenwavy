@@ -3,12 +3,10 @@ const database = require('./firebaseSDK');
 // Await reactions on raffle messages, recursive
 async function awaitRaffleReaction(message, channel, filter) {
     let user;
-    //console.log("waiting")
 
     await message.awaitReactions(filter, { max: 1 })
     .then(async collected => {
         user = collected.first().users.cache.last()
-        console.log(user.id);
         await message.reactions.cache.find(r => r.emoji.id == '814968693981184030').users.remove(user)
     })
     .catch(err => console.log(err))
@@ -25,9 +23,10 @@ async function ticketPurchase(user, channel) {
     .then(async (message) => {
         let filter = (m) => m.author.id == user.id;
 
+        // How many tickets does user want to buy?
         await channel.awaitMessages(filter, { max: 1, time: 30000, errors: ['time'] })
         .then(async collected => {
-            console.log(collected.first().content + "      " + await database.getCurrency(user.id))
+            console.log(user.id + "     " + collected.first().content + "      " + await database.getCurrency(user.id))
 
             let response = await calculateCurrency(channel, collected, user);
 
@@ -46,8 +45,6 @@ async function ticketPurchase(user, channel) {
         await message.delete()
     })
     .catch(err => console.log(err))
-    
-    //console.log("Finished Ticket Purchase")
 }
 
 async function calculateCurrency(channel, message, user) {
@@ -56,7 +53,7 @@ async function calculateCurrency(channel, message, user) {
 
     // If input is not a valid number
     if(isNaN(message.first().content) && message.first().content != 'all') {
-        return await channel.send("Please enter a fucking number...")
+        return await channel.send("Please enter a valid number <:PogO:804089420020973568>")
         .then(message => {return message})
 
     // If input is 0
@@ -71,25 +68,27 @@ async function calculateCurrency(channel, message, user) {
     }
 
     // If user enters 'all'
-    let amount;
     let remaining;
     let max = Math.trunc(wallet/raffle.cost_per_ticket);
     if (message.first().content == "all") {
         remaining = wallet - (max * raffle.cost_per_ticket);
 
-        //database.removeCurrency()
+        database.removeCurrency(user.id, user.username, max * raffle.cost_per_ticket)
 
         return await channel.send("You purchased a total of " + max + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
         .then(message => {return message})
     }
     
-    // If user enters  a valid number
-    amount = Math.trunc(parseInt(message.first().content));
+    // If user enters a valid number
+    let amount = Math.trunc(parseInt(message.first().content));
     if (amount > max) {
         return await channel.send("You don't have enough <:HentaiCoin:814968693981184030>. Broke ass bitch")
         .then(message => {return message})
     } else {
         remaining = wallet - (amount * raffle.cost_per_ticket);
+
+        database.removeCurrency(user.id, user.username, amount * raffle.cost_per_ticket)
+
         return await channel.send("You purchased a total of " + amount + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
         .then(message => {return message})
     }

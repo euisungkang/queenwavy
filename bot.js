@@ -1,9 +1,10 @@
 const Discord = require('discord.js');
 const database = require('./firebaseSDK');
 const raffle = require('./raffle.js')
+const market = require('./market.js')
 const client = new Discord.Client();
 
-client.on('ready', () => {
+client.on('ready', async () => {
     console.log('help');
 });
 
@@ -26,7 +27,7 @@ client.on('message', async message => {
                     + "\n> **Max Tickets per Person: **" + r.max_tickets
                     + "\n> \n> To purchase tickets, click the <:HentaiCoin:814968693981184030> below!"
                     + "\n> "
-                    + "\n> __**Countdown Until Raffle Draw**__"
+                    + "\n__**Countdown Until Raffle Draw**__"
                     + "\n```fix\n hi\n```"
                     + "\n")
         .then(thenEmbed => {

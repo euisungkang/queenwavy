@@ -33,9 +33,7 @@ async function addCurrency(m, amount) {
     })
 };
 
-async function removeCurrency(m, amount) {
-    let { id } = m;
-    let name = m.member.user.username
+async function removeCurrency(id, name, amount) {
 
     let user = db.collection('wallets').doc(id);
     let aggregate_amount;
@@ -79,9 +77,31 @@ async function getRaffle() {
     return doc.data();
 }
 
+async function getTopWallets() {
+    const wallets = await db.collection('wallets').get();
+    let walletmap = new Map();
+
+    wallets.docs.map(doc => {
+        walletmap.set(doc.data().userID, doc.data().currency);
+    })
+
+    const sorted = await new Map([...walletmap.entries()].sort((a, b) => b[1] - a[1]));
+
+    let index = 0;
+    for (let k of sorted.keys()) {
+        if (index > 4) {
+          sorted.delete(k);
+        }
+        index++;
+    }
+
+    return sorted;
+}
+
 module.exports = {
     addCurrency : addCurrency,
     removeCurrency : removeCurrency,
     getCurrency : getCurrency,
-    getRaffle : getRaffle
+    getRaffle : getRaffle,
+    getTopWallets : getTopWallets
 }
