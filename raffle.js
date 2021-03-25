@@ -1,7 +1,57 @@
 const database = require('./firebaseSDK');
+const Discord = require('discord.js')
+
+let rffID = '824718557446144081';
+
+async function updateRaffle(channel) {
+    console.log("updating raffle")
+
+    let embed = await getEmbed();
+
+    let exists = true;
+    try {
+        await channel.messages.fetch(rffID)
+    } catch (error) {
+        console.error(error)
+        exists = false;
+    } finally {
+        if (!exists) {
+            let msg = await channel.send(embed)
+            msg.react('<:HentaiCoin:814968693981184030>')
+            rffID = msg.id
+            return msg;
+        } else {
+            let msg = await channel.messages.fetch(rffID)
+            msg.react('<:HentaiCoin:814968693981184030>')
+            msg.edit(embed);
+            return msg;
+        }
+    }
+}
+
+async function getEmbed() {
+    let r = await database.getRaffle();
+    //console.log(r)
+
+    let embed = await new Discord.MessageEmbed()
+    .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Raffle")
+    .setThumbnail('https://i.ibb.co/5kL7hBD/Wavy-Logo.png')
+    .setDescription("@everyone A new raffle for **" + r.name + "** is now open! You are free to spend your Hentai Coins <:HentaiCoin:814968693981184030> to buy tickets." 
+                        + "\n```"+ r.description + "```")
+    .addFields(
+        { name: "Cost per Ticket:  " + r.cost_per_ticket, value: '\u200B' },
+        { name: "Max Tickets per Person:  " + r.max_tickets, value: '\u200B' },
+        { name: "To purchase tickets, click the <:HentaiCoin:814968693981184030> below", value: '\u200B' },
+        { name: "Countdown Until Raffle Draw", value: "```fix\nok\n```" }
+    )
+    .setFooter("Sponsored by PornHub", 'https://steamuserimages-a.akamaihd.net/ugc/966474717666996844/124820F71D8D65A2986BE2DAEA1ADAFBC0308A23/')
+
+    return embed;
+}
 
 // Await reactions on raffle messages, recursive
 async function awaitRaffleReaction(message, channel, filter) {
+    console.log("awaiting reaction")
     let user;
 
     await message.awaitReactions(filter, { max: 1 })
@@ -73,7 +123,7 @@ async function calculateCurrency(channel, message, user) {
     if (message.first().content == "all") {
         remaining = wallet - (max * raffle.cost_per_ticket);
 
-        database.removeCurrency(user.id, user.username, max * raffle.cost_per_ticket)
+        //database.removeCurrency(user.id, user.username, max * raffle.cost_per_ticket)
 
         return await channel.send("You purchased a total of " + max + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
         .then(message => {return message})
@@ -87,7 +137,7 @@ async function calculateCurrency(channel, message, user) {
     } else {
         remaining = wallet - (amount * raffle.cost_per_ticket);
 
-        database.removeCurrency(user.id, user.username, amount * raffle.cost_per_ticket)
+        //database.removeCurrency(user.id, user.username, amount * raffle.cost_per_ticket)
 
         return await channel.send("You purchased a total of " + amount + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
         .then(message => {return message})
@@ -96,6 +146,5 @@ async function calculateCurrency(channel, message, user) {
 
 module.exports = {
     awaitRaffleReaction : awaitRaffleReaction,
-    ticketPurchase : ticketPurchase,
-    calculateCurrency : calculateCurrency
+    updateRaffle : updateRaffle
 }

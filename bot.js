@@ -1,42 +1,38 @@
 const Discord = require('discord.js');
 const database = require('./firebaseSDK');
 const raffle = require('./raffle.js')
-const market = require('./market.js')
 const client = new Discord.Client();
 
 client.on('ready', async () => {
     console.log('help');
+
+    //Command channel
+    let channel = await client.channels.fetch('794722902003941417')
+
+    let raffle_channel = await client.channels.fetch('824718105989218349')
+
+    // let status_msg = await raffle_channel.messages.fetch('824718440476311562')
+    // status_msg.edit("__**Raffle Status: **__\n```diff\n- Offline\n```")
+
+
+    initializeRaffle(raffle_channel)
 });
 
 let voiceStates = {};
 
 client.login(process.env.BOT_TOKEN);
-//client.login('')
+//client.login('ODEyOTA0ODY3NDYyNjQzNzEz.YDHipw._vJOWA08gbgJsunIuJlICGp99yw')
 
 client.on('message', async message => {
 
     //Bot Central General: 813017396553449472
     //Wavy Bot Commands: 794722902003941417
-    let channel = client.channels.cache.find(channel => channel.id === '794722902003941417')
+    let channel = await client.channels.fetch('794722902003941417')
 
     if(message.content == '$raffle') {
-        let r = await database.getRaffle();
-        channel.send("@everyone A new raffle for **" + r.name + "** is now open! You are free to spend your Hentai Coins <:HentaiCoin:814968693981184030> to buy tickets." 
-                    + "\n> ```"+ r.description + "```"
-                    + "\n> **Cost per Ticket: **" + r.cost_per_ticket
-                    + "\n> **Max Tickets per Person: **" + r.max_tickets
-                    + "\n> \n> To purchase tickets, click the <:HentaiCoin:814968693981184030> below!"
-                    + "\n> "
-                    + "\n__**Countdown Until Raffle Draw**__"
-                    + "\n```fix\n hi\n```"
-                    + "\n")
-        .then(thenEmbed => {
 
-            thenEmbed.react('<:HentaiCoin:814968693981184030>');
-            const filter = (reaction, user) => reaction.emoji.id == '814968693981184030' && user.id != thenEmbed.author.id
-            raffle.awaitRaffleReaction(thenEmbed, channel, filter);
+        initializeRaffle(channel)
 
-        })
     } else if (message.content == '$wallet') {
         //console.log(message.author.id);
         database.getCurrency(message.author.id).then(res => {
@@ -123,4 +119,12 @@ async function calculateTimeSpent(oldMember, id) {
     }
     console.log('Left Channel: ' + oldMember.member.user.username)
 
+}
+
+async function initializeRaffle(channel) {
+    let msg = await raffle.updateRaffle(channel);
+
+    msg.react('<:HentaiCoin:814968693981184030>');
+    const filter = (reaction, user) => reaction.emoji.id == '814968693981184030' && user.id != msg.author.id
+    raffle.awaitRaffleReaction(msg, channel, filter);
 }
