@@ -21,7 +21,6 @@ client.on('ready', async () => {
 let voiceStates = {};
 
 client.login(process.env.BOT_TOKEN);
-//client.login('ODEyOTA0ODY3NDYyNjQzNzEz.YDHipw._vJOWA08gbgJsunIuJlICGp99yw')
 
 client.on('message', async message => {
 
