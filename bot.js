@@ -114,9 +114,9 @@ async function calculateTimeSpent(oldMember, id) {
     console.log(diff);
 
     // Filter out users less than 5 minutes = 5 * 60
-    if (diff > 5 ) {
+    if (diff > 5 * 60) {
 
-        let amount = Math.round(diff / (5));
+        let amount = Math.round(diff / (5 * 60));
         await database.addCurrency(oldMember, amount);
     }
     console.log('Left Channel: ' + oldMember.member.user.username)
