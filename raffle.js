@@ -70,7 +70,7 @@ async function ticketPurchase(user, channel) {
     await channel.send("<@" + user.id + "> How many tickets would you like to purchase? Your balance is: **"
                 + await database.getCurrency(user.id)
                 + "** <:HentaiCoin:814968693981184030>.\n You can type 'all' to purchase as many tickets as you can afford.")
-    .then(async (message) => {
+    .then(async message => {
         let filter = (m) => m.author.id == user.id;
 
         // How many tickets does user want to buy?

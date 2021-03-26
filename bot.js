@@ -20,7 +20,8 @@ client.on('ready', async () => {
 
 let voiceStates = {};
 
-client.login(process.env.BOT_TOKEN);
+//client.login('');
+client.login(process.env.BOT_TOKEN)
 
 client.on('message', async message => {
 
@@ -110,10 +111,12 @@ async function calculateTimeSpent(oldMember, id) {
     // getTime returns time in seconds
     let diff = (now.getTime() - joined.getTime()) / 1000;
 
-    // Filter out users less than 5 minutes = 5 * 60
-    if (diff > 5 * 60) {
+    console.log(diff);
 
-        let amount = Math.round(diff / (5 * 60));
+    // Filter out users less than 5 minutes = 5 * 60
+    if (diff > 5 ) {
+
+        let amount = Math.round(diff / (5));
         await database.addCurrency(oldMember, amount);
     }
     console.log('Left Channel: ' + oldMember.member.user.username)
