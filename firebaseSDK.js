@@ -8,8 +8,8 @@ admin.initializeApp({
 let db = admin.firestore();
 
 async function addCurrency(m, amount) {
-    let { id } = m;
-    let name = m.member.user.username
+    let id = m.id
+    let name = m.username
 
     console.log("ID: " + id + "    name:" + name + "    amount: " + amount);
 
@@ -33,7 +33,9 @@ async function addCurrency(m, amount) {
     })
 };
 
-async function removeCurrency(id, name, amount) {
+async function removeCurrency(m, amount) {
+    let id = m.id
+    let name = m.name
 
     let user = db.collection('wallets').doc(id);
     let aggregate_amount;
