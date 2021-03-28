@@ -29,18 +29,19 @@ async function addCurrency(m, amount) {
     }).then(() => {
         console.log("Document written successfully");
     }).catch(err => {
-        console.log("Error: " + err);
+        console.log(err);
     })
 };
 
 async function removeCurrency(m, amount) {
     let id = m.id
-    let name = m.name
+    let name = m.username
 
     let user = db.collection('wallets').doc(id);
     let aggregate_amount;
 
     const doc = await user.get();
+    //console.log(doc)
     if (doc.exists) {
         aggregate_amount = doc.data().currency - amount;
         console.log(doc.data());
@@ -53,9 +54,26 @@ async function removeCurrency(m, amount) {
     }).then(() => {
         console.log("Document written successfully");
     }).catch(err => {
-        console.log("Error: " + err);
+        console.log(err);
     })
 }
+
+async function purgeWallet(id) {
+    let name = "ALT ACCOUNT"
+    
+    let user = db.collection('wallets').doc(id)
+    
+    await user.set({
+        userID: id,
+        name: name,
+        currency: 0
+    }).then(() => {
+        console.log("Alt purged successfully")
+    }).catch(err => {
+        console.log(err)
+    })
+}
+
 
 async function getCurrency(id) {
     let user = db.collection('wallets').doc(id);
@@ -79,12 +97,13 @@ async function getRaffle() {
     return doc.data();
 }
 
+
 async function getTopWallets() {
     const wallets = await db.collection('wallets').get();
     let walletmap = new Map();
 
     wallets.docs.map(doc => {
-        walletmap.set(doc.data().userID, doc.data().currency);
+        walletmap.set((doc.data()).userID, (doc.data()).currency);
     })
 
     const sorted = await new Map([...walletmap.entries()].sort((a, b) => b[1] - a[1]));
@@ -103,6 +122,7 @@ async function getTopWallets() {
 module.exports = {
     addCurrency : addCurrency,
     removeCurrency : removeCurrency,
+    purgeWallet : purgeWallet,
     getCurrency : getCurrency,
     getRaffle : getRaffle,
     getTopWallets : getTopWallets

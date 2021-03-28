@@ -1,10 +1,16 @@
 const Discord = require('discord.js');
 const database = require('./firebaseSDK');
+const cron = require('node-cron')
 const raffle = require('./raffle.js')
 const client = new Discord.Client();
 
+//client.login('');
+client.login(process.env.BOT_TOKEN)
+
 client.on('ready', async () => {
     console.log('help');
+
+    purgeAlts();
 
     //Command channel
     let channel = await client.channels.fetch('794722902003941417')
@@ -14,15 +20,15 @@ client.on('ready', async () => {
     // let status_msg = await raffle_channel.messages.fetch('824718440476311562')
     // status_msg.edit("__**Raffle Status: **__\n```diff\n- Offline\n```")
 
-
     initializeRaffle(raffle_channel)
 });
 
+cron.schedule('00 * * * *', async () => {
+    purgeAlts();
+})
+
 let voiceStates = {};
 let prefix = '$'
-
-//client.login('');
-client.login(process.env.BOT_TOKEN)
 
 client.on('message', async message => {
     if (!message.content.startsWith(prefix)) return;
@@ -105,9 +111,11 @@ async function giveCommand(args, message) {
     if (user == null || source == null) {
         errorMessage(message, "Invalid user to send <:HentaiCoin:814968693981184030>")
         return;
-    }
-    else if (isNaN(amount) || amount < 1) {
+    } else if (isNaN(amount) || amount < 1) {
         errorMessage(message, "Please enter a valid number :unamused:")
+        return;
+    } else if (user.id == source.id) {
+        errorMessage(message, "Can't sent money to yourself <:PepeWHAT:813130771799081030> <:PepeWHAT:813130771799081030> <:PepeWHAT:813130771799081030>")
         return;
     }
 
@@ -134,6 +142,7 @@ async function giveCommand(args, message) {
 
     user.send(embed)
     source.send(embed2)
+    message.delete()    
 }
 
 async function walletCommand(message) {
@@ -195,4 +204,19 @@ async function initializeRaffle(channel) {
     msg.react('<:HentaiCoin:814968693981184030>');
     const filter = (reaction, user) => reaction.emoji.id == '814968693981184030' && user.id != msg.author.id
     raffle.awaitRaffleReaction(msg, channel, filter);
+}
+
+let alts = ['422931223552458764', '799728810261086259', '801683957556838421', '808484429038092298', '775501860123574322', '161024271827599360', '638887290751549443']
+
+async function purgeAlts() {
+    // jinmoto2 : 422931223552458764
+    // 102: 799728810261086259
+    // kaon02: 801683957556838421
+    // Phone Sloth: 808484429038092298
+    // Haldoos : 775501860123574322
+    // nachomic: 161024271827599360
+    // lil majima : 638887290751549443
+    for (let i = 0; i < alts.length; i++) {
+        database.purgeWallet(alts[i])
+    }
 }
