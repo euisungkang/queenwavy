@@ -29,7 +29,6 @@ cron.schedule('00 * * * *', async () => {
 
 let voiceStates = {};
 let prefix = '$'
-let log = await client.channels.fetch('826499502403747921')
 
 client.on('message', async message => {
     if (!message.content.startsWith(prefix)) return;
@@ -144,7 +143,7 @@ async function giveCommand(args, message) {
     user.send(embed)
     source.send(embed2)
 
-  
+    let log = await client.channels.fetch('826499502403747921')
     log.send("Source: " + source.username + "   to "  +user.username + "     amount: " + amount)
 
     message.delete()    
