@@ -20,7 +20,6 @@ client.on('ready', async () => {
 
 let voiceStates = {};
 
-//client.login('');
 client.login(process.env.BOT_TOKEN)
 
 client.on('message', async message => {
@@ -58,6 +57,7 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
     if (oldUserChannel === null && newUserChannel != null && !(await isBot(id))) {
 
         // Category ID of arcade: 687839393444397111
+        // Category ID of Wavy: 816565807693824031
         if (await channelIsValid(newUserChannel)) {
             voiceStates[id] = new Date();
             console.log('Joined Channel: ' + newMember.member.user.username)
@@ -66,7 +66,7 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
     // If user exits channels
     } else if (oldUserChannel != null && newUserChannel === null && !(await isBot(id))) {
         if (await channelIsValid(oldUserChannel)) {   
-            calculateTimeSpent(oldMember, id)
+            calculateTimeSpent(oldMember, id, oldUserChannel.parentID)
         }
 
     // Moving between channels
@@ -77,7 +77,7 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
 
         // If moving from valid to non-valid channel
         if (await channelIsValid(oldUserChannel) && !(await channelIsValid(newUserChannel))) {
-            calculateTimeSpent(oldMember, id);
+            calculateTimeSpent(oldMember, id, oldUserChannel.parentID);
         
         // If moving from non-valid to valid channel
         } else if (!(await channelIsValid(oldUserChannel)) && await channelIsValid(newUserChannel)) {
@@ -95,15 +95,16 @@ async function isBot(id) {
 
 async function channelIsValid(channel) {
     // Arcade: 687839393444397111
+    // Wavy: 816565807693824031
     // Study: 809345799526809600
     // AFK: 814930846326456420
 
-    let valid = await (channel.parentID == '687839393444397111' && channel.id != '809345799526809600' && channel.id != '814930846326456420');
+    let valid = await ((channel.parentID == '687839393444397111' || channel.parentID == '816565807693824031') && channel.id != '809345799526809600' && channel.id != '814930846326456420');
 
     return valid
 }
 
-async function calculateTimeSpent(oldMember, id) {
+async function calculateTimeSpent(oldMember, id, channelID) {
      
     let now = new Date();
     let joined = voiceStates[id] || new Date();
@@ -114,13 +115,23 @@ async function calculateTimeSpent(oldMember, id) {
     console.log(diff);
 
     // Filter out users less than 5 minutes = 5 * 60
-    if (diff > 5 * 60) {
+    if (diff > (5 * 60)) {
+        let amount;
+        if (channelID == '687839393444397111') {
+            amount = Math.floor(diff / (5 * 60));
+            //console.log("in arcade")
+        }
+        else if (channelID == '816565807693824031') {
+            amount = Math.floor(diff / (10 * 60));
+            //console.log("in wavy")
+        }
+        else {
+            amount = 0;
+        }
 
-        let amount = Math.round(diff / (5 * 60));
         await database.addCurrency(oldMember, amount);
     }
     console.log('Left Channel: ' + oldMember.member.user.username)
-
 }
 
 async function initializeRaffle(channel) {
