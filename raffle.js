@@ -123,7 +123,7 @@ async function calculateCurrency(channel, message, user) {
     if (message.first().content == "all") {
         remaining = wallet - (max * raffle.cost_per_ticket);
 
-        //database.removeCurrency(user.id, user.username, max * raffle.cost_per_ticket)
+        //database.removeCurrency(user, max * raffle.cost_per_ticket)
 
         return await channel.send("You purchased a total of " + max + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
         .then(message => {return message})
@@ -137,7 +137,7 @@ async function calculateCurrency(channel, message, user) {
     } else {
         remaining = wallet - (amount * raffle.cost_per_ticket);
 
-        //database.removeCurrency(user.id, user.username, amount * raffle.cost_per_ticket)
+        //database.removeCurrency(user, amount * raffle.cost_per_ticket)
 
         return await channel.send("You purchased a total of " + amount + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
         .then(message => {return message})
