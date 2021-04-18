@@ -79,8 +79,13 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
         } else if (!(await channelIsValid(oldUserChannel)) && await channelIsValid(newUserChannel)) {
             voiceStates[id] = new Date();
             console.log('Joined Channel: ' + newMember.member.user.username)
+        } else if ((await channelIsValid(oldUserChannel) && await channelIsValid(newUserChannel)) &&
+                  ((oldUserChannel.parentID == '687839393444397111' && newUserChannel.parentID == '816565807693824031') ||
+                   (oldUserChannel.parentID == '816565807693824031' && newUserChannel.parentID == '687839393444397111'))) {
+            await calculateTimeSpent(oldMember, id, oldUserChannel.parentID);
+            voiceStates[id] = new Date();
+            console.log("Switched to " + oldUserChannel.parentID + " : " + newMember.member.user.username)
         }
-    
     }
 });
 
