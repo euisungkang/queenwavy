@@ -4,7 +4,7 @@ const cron = require('node-cron')
 const raffle = require('./raffle.js')
 const client = new Discord.Client();
 
-//client.login('');
+//client.login('ls');
 client.login(process.env.BOT_TOKEN)
 
 client.on('ready', async () => {
@@ -38,9 +38,10 @@ client.on('message', async message => {
   
     if (cmd == 'wallet') {
         walletCommand(message)
-    } else if (cmd == 'give') {
-        giveCommand(args, message)
     }
+    // else if (cmd == 'give') {
+    //     giveCommand(args, message)
+    // }
 });
 
 client.on('voiceStateUpdate', async (oldMember, newMember) => {
