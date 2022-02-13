@@ -33,6 +33,58 @@ async function addCurrency(m, amount) {
     })
 };
 
+async function setTimeJoined(m) {
+    let time = new Date()
+
+    console.log("User: " + m.username + " of ID: " + m.id + " joined VC at " + time)
+
+    let user = db.collection('wallets').doc(m.id);
+
+    const doc = await user.get();
+    if (!doc.exists) {
+        await user.set({
+            userID: m.id,
+            name: m.username,
+            currency: 0,
+            time: time
+        }).then(() => {
+            console.log("Time Added Successfully");
+        }).catch(err => {
+            console.log(err);
+        })
+    } else {
+        await user.update({
+            time: time
+        }).then(() => {
+            console.log("Time Added Successfully");
+        }).catch(err => {
+            console.log(err);
+        })
+    }
+}
+
+async function getTimeJoined(m) {
+    let time = new Date()
+
+    console.log("User: " + m.username + " of ID: " + m.id + " left a channel at " + time)
+
+    let user = db.collection('wallets').doc(m.id);
+    const doc = await user.get();
+    if (doc.exists && doc.data().time != null) {
+        time = doc.data().time.toDate()
+    }
+
+    await user.update({
+        time: null
+    }).then(() => {
+        console.log("Time Removed Successfully");
+    }).catch(err => {
+        console.log(err);
+    })
+
+    return time
+}
+
 async function removeCurrency(m, amount) {
     let id = m.id
     let name = m.username
@@ -67,8 +119,6 @@ async function purgeWallet(id) {
         userID: id,
         name: name,
         currency: 0
-    }).then(() => {
-        console.log("Alt purged successfully")
     }).catch(err => {
         console.log(err)
     })
@@ -125,5 +175,7 @@ module.exports = {
     purgeWallet : purgeWallet,
     getCurrency : getCurrency,
     getRaffle : getRaffle,
-    getTopWallets : getTopWallets
+    getTopWallets : getTopWallets,
+    setTimeJoined : setTimeJoined,
+    getTimeJoined : getTimeJoined
 }

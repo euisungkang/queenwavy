@@ -1,11 +1,13 @@
 const Discord = require('discord.js');
 const database = require('./firebaseSDK');
 const cron = require('node-cron')
-const raffle = require('./raffle.js')
+const raffle = require('./raffle.js');
+const { setTimeJoined } = require('./firebaseSDK');
 const client = new Discord.Client();
 
 //client.login('ls');
 client.login(process.env.BOT_TOKEN)
+//client.login('')
 
 client.on('ready', async () => {
     console.log('help');
@@ -20,14 +22,13 @@ client.on('ready', async () => {
     // let status_msg = await raffle_channel.messages.fetch('824718440476311562')
     // status_msg.edit("__**Raffle Status: **__\n```diff\n- Offline\n```")
 
-    initializeRaffle(raffle_channel)
+    //initializeRaffle(raffle_channel)
 });
 
 cron.schedule('00 * * * *', async () => {
     purgeAlts();
 })
 
-let voiceStates = {};
 let prefix = '$'
 
 client.on('message', async message => {
@@ -56,8 +57,11 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
         // Category ID of arcade: 687839393444397111
         // Category ID of Wavy: 816565807693824031
         if (await channelIsValid(newUserChannel)) {
-            voiceStates[id] = new Date();
-            console.log('Joined Channel: ' + newMember.member.user.username)
+
+
+            database.setTimeJoined(oldMember.member.user)
+
+            //console.log('Joined Channel: ' + newMember.member.user.username)
         }
 
     // If user exits channels
@@ -75,16 +79,17 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
         // If moving from valid to non-valid channel
         if (await channelIsValid(oldUserChannel) && !(await channelIsValid(newUserChannel))) {
             calculateTimeSpent(oldMember, id, oldUserChannel.parentID);
-        
+            database.setTimeJoined(oldMember.member.user)
         // If moving from non-valid to valid channel
         } else if (!(await channelIsValid(oldUserChannel)) && await channelIsValid(newUserChannel)) {
-            voiceStates[id] = new Date();
-            console.log('Joined Channel: ' + newMember.member.user.username)
+
+            database.setTimeJoined(oldMember.member.user)
+
         } else if ((await channelIsValid(oldUserChannel) && await channelIsValid(newUserChannel)) &&
                   ((oldUserChannel.parentID == '687839393444397111' && newUserChannel.parentID == '816565807693824031') ||
                    (oldUserChannel.parentID == '816565807693824031' && newUserChannel.parentID == '687839393444397111'))) {
             await calculateTimeSpent(oldMember, id, oldUserChannel.parentID);
-            voiceStates[id] = new Date();
+            database.setTimeJoined(oldMember.member.user)
             console.log("Switched to " + oldUserChannel.parentID + " : " + newMember.member.user.username)
         }
     }
@@ -193,12 +198,12 @@ async function channelIsValid(channel) {
 async function calculateTimeSpent(oldMember, id, channelID) {
      
     let now = new Date();
-    let joined = voiceStates[id] || new Date();
+    let joined = await database.getTimeJoined(oldMember.member.user)
 
     // getTime returns time in seconds
     let diff = (now.getTime() - joined.getTime()) / 1000;
 
-    //console.log(diff);
+    console.log(diff);
 
     // Filter out users less than 5 minutes = 5 * 60
     if (diff > (5 * 60)) {
@@ -217,7 +222,7 @@ async function calculateTimeSpent(oldMember, id, channelID) {
 
         await database.addCurrency(oldMember.member.user, amount);
     }
-    console.log('Left Channel: ' + oldMember.member.user.username)
+    //console.log('Left Channel: ' + oldMember.member.user.username)
 }
 
 async function initializeRaffle(channel) {
@@ -226,6 +231,8 @@ async function initializeRaffle(channel) {
     msg.react('<:HentaiCoin:814968693981184030>');
     const filter = (reaction, user) => reaction.emoji.id == '814968693981184030' && user.id != msg.author.id
     raffle.awaitRaffleReaction(msg, channel, filter);
+
+    raffle.startRaffleTimer(msg);
 }
 
 let alts = ['422931223552458764', '799728810261086259', '801683957556838421', '808484429038092298', '775501860123574322', '161024271827599360', '638887290751549443', '485471519162499075']
