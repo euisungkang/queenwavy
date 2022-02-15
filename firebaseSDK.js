@@ -169,6 +169,38 @@ async function getTopWallets() {
     return sorted;
 }
 
+async function checkNotif(id) {
+    const notif = await db.collection('notification').doc(id)
+
+    const doc = await notif.get()
+    if (doc.exists)
+        return false
+    else
+        return true
+}
+
+async function disableReceipt(id) {
+    const notif = await db.collection('notification').doc(id)
+
+    const doc = await notif.get()
+    if (!doc.exists) {
+        await notif.set({
+            userID: id
+        }).catch(err => {
+            console.log(err)
+        })
+    }
+}
+
+async function enableReceipt(id) {
+    const notif = await db.collection('notification').doc(id)
+
+    const doc = await notif.get()
+    if (doc.exists) {
+        notif.delete()
+    }
+}
+
 module.exports = {
     addCurrency : addCurrency,
     removeCurrency : removeCurrency,
@@ -177,5 +209,8 @@ module.exports = {
     getRaffle : getRaffle,
     getTopWallets : getTopWallets,
     setTimeJoined : setTimeJoined,
-    getTimeJoined : getTimeJoined
+    getTimeJoined : getTimeJoined,
+    disableReceipt : disableReceipt,
+    enableReceipt : enableReceipt,
+    checkNotif : checkNotif
 }

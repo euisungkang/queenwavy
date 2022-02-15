@@ -7,7 +7,6 @@ const client = new Discord.Client();
 
 //client.login('ls');
 client.login(process.env.BOT_TOKEN)
-//client.login('')
 
 client.on('ready', async () => {
     console.log('help');
@@ -23,6 +22,8 @@ client.on('ready', async () => {
     // status_msg.edit("__**Raffle Status: **__\n```diff\n- Offline\n```")
 
     //initializeRaffle(raffle_channel)
+
+    //sendReceipt('237018129664966656')
 });
 
 cron.schedule('00 * * * *', async () => {
@@ -39,6 +40,10 @@ client.on('message', async message => {
   
     if (cmd == 'wallet') {
         walletCommand(message)
+    } else if (cmd == 'disable') {
+        disableReceipts(message)
+    } else if (cmd == 'enable') {
+        enableReceipts(message)
     }
     // else if (cmd == 'give') {
     //     giveCommand(args, message)
@@ -58,7 +63,6 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
         // Category ID of Wavy: 816565807693824031
         if (await channelIsValid(newUserChannel)) {
 
-
             database.setTimeJoined(oldMember.member.user)
 
             //console.log('Joined Channel: ' + newMember.member.user.username)
@@ -67,7 +71,7 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
     // If user exits channels
     } else if (oldUserChannel != null && newUserChannel === null && !(await isBot(id))) {
         if (await channelIsValid(oldUserChannel)) {   
-            calculateTimeSpent(oldMember, id, oldUserChannel.parentID)
+            calculateTimeSpent(oldMember, oldUserChannel.parentID)
         }
 
     // Moving between channels
@@ -78,7 +82,7 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
 
         // If moving from valid to non-valid channel
         if (await channelIsValid(oldUserChannel) && !(await channelIsValid(newUserChannel))) {
-            calculateTimeSpent(oldMember, id, oldUserChannel.parentID);
+            calculateTimeSpent(oldMember, oldUserChannel.parentID);
             database.setTimeJoined(oldMember.member.user)
         // If moving from non-valid to valid channel
         } else if (!(await channelIsValid(oldUserChannel)) && await channelIsValid(newUserChannel)) {
@@ -88,7 +92,7 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
         } else if ((await channelIsValid(oldUserChannel) && await channelIsValid(newUserChannel)) &&
                   ((oldUserChannel.parentID == '687839393444397111' && newUserChannel.parentID == '816565807693824031') ||
                    (oldUserChannel.parentID == '816565807693824031' && newUserChannel.parentID == '687839393444397111'))) {
-            await calculateTimeSpent(oldMember, id, oldUserChannel.parentID);
+            await calculateTimeSpent(oldMember, oldUserChannel.parentID);
             database.setTimeJoined(oldMember.member.user)
             console.log("Switched to " + oldUserChannel.parentID + " : " + newMember.member.user.username)
         }
@@ -195,7 +199,7 @@ async function channelIsValid(channel) {
     return valid
 }
 
-async function calculateTimeSpent(oldMember, id, channelID) {
+async function calculateTimeSpent(oldMember, channelID) {
      
     let now = new Date();
     let joined = await database.getTimeJoined(oldMember.member.user)
@@ -220,9 +224,57 @@ async function calculateTimeSpent(oldMember, id, channelID) {
             amount = 0;
         }
 
+        if (await database.checkNotif(oldMember.member.user.id)) {
+            sendReceipt(oldMember, diff, amount)
+        }
+
         await database.addCurrency(oldMember.member.user, amount);
     }
-    //console.log('Left Channel: ' + oldMember.member.user.username)
+}
+
+async function sendReceipt(member, time, amount) {
+    let wallet = await database.getCurrency(member.member.user.id)
+
+    var today = new Date();
+
+    var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+
+    var timeFormat = ""
+    if (time > 86400) {
+        timeFormat = "a very long time <:PepeMonkaOMEGA:814749729538834452>"
+    } else {
+        timeFormat = new Date(null)
+        timeFormat.setSeconds(time)
+
+        timeFormat = timeFormat.toISOString().substring(11, 19)
+    }
+
+    let embed = await new Discord.MessageEmbed()
+    .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Wallet")
+    .setThumbnail('https://i.ibb.co/5kL7hBD/Wavy-Logo.png')
+    .setDescription("**" + date + "**" + 
+                    "\nSession Length: **" + timeFormat + "**" + 
+                    "\n\nCoins made this session: " + amount + " <:HentaiCoin:814968693981184030>" +
+                    "\n**Total balance**: " + wallet + " <:HentaiCoin:814968693981184030>" +
+                    "\n\nTo disable automatic updates after every session:" +
+                    "\n\xa0\xa0\xa0\xa0\xa0type **$disable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
+                    "\n\nTo enable this feature again:" +
+                    "\n\xa0\xa0\xa0\xa0\xa0type **$enable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
+                    "\n\n*Commands typed in this DM will not work*")
+
+    message = await member.member.send(embed)
+}
+
+async function disableReceipts(msg) {
+    database.disableReceipt(msg.author.id)
+
+    msg.delete()
+}
+
+async function enableReceipts(msg) {
+    database.enableReceipt(msg.author.id)
+
+    msg.delete()
 }
 
 async function initializeRaffle(channel) {
