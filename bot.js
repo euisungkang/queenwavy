@@ -17,11 +17,12 @@ client.on('ready', async () => {
     let channel = await client.channels.fetch('794722902003941417')
 
     let raffle_channel = await client.channels.fetch('824718105989218349')
+    let raffle_logs = await client.channels.fetch('961870235542106162')
 
-    // let status_msg = await raffle_channel.messages.fetch('824718440476311562')
-    // status_msg.edit("__**Raffle Status: **__\n```diff\n- Offline\n```")
+    //let status_msg = await raffle_channel.messages.fetch('824718440476311562')
+    //status_msg.edit("__**Raffle Status: **__\n```diff\n- Offline\n```")
 
-    //initializeRaffle(raffle_channel)
+    initializeRaffle(raffle_channel, raffle_logs)
 
     //sendReceipt('237018129664966656')
 });
@@ -107,6 +108,7 @@ async function errorMessage(message, m) {
     message.delete()
 }
 
+// Forbidden
 async function giveCommand(args, message) {
     console.log(args)
     if (!args[2] || args[3]) {
@@ -217,7 +219,7 @@ async function calculateTimeSpent(oldMember, channelID) {
             //console.log("in arcade")
         }
         else if (channelID == '816565807693824031') {
-            amount = Math.floor(diff / (10 * 60));
+            amount = Math.floor(diff / (5 * 60));
             //console.log("in wavy")
         }
         else {
@@ -277,12 +279,12 @@ async function enableReceipts(msg) {
     msg.delete()
 }
 
-async function initializeRaffle(channel) {
+async function initializeRaffle(channel, logs) {
     let msg = await raffle.updateRaffle(channel);
 
     msg.react('<:HentaiCoin:814968693981184030>');
     const filter = (reaction, user) => reaction.emoji.id == '814968693981184030' && user.id != msg.author.id
-    raffle.awaitRaffleReaction(msg, channel, filter);
+    raffle.awaitRaffleReaction(msg, channel, filter, logs);
 
     raffle.startRaffleTimer(msg);
 }

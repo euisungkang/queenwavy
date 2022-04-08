@@ -1,5 +1,5 @@
 const database = require('./firebaseSDK');
-const Discord = require('discord.js')
+const Discord = require('discord.js');
 
 let rffID = '824718557446144081';
 
@@ -79,7 +79,7 @@ async function getEmbed(r) {
 }
 
 // Await reactions on raffle messages, recursive
-async function awaitRaffleReaction(message, channel, filter) {
+async function awaitRaffleReaction(message, channel, filter, logs) {
     console.log("awaiting reaction")
     let user;
 
@@ -87,34 +87,37 @@ async function awaitRaffleReaction(message, channel, filter) {
     .then(async collected => {
         user = collected.first().users.cache.last()
         await message.reactions.cache.find(r => r.emoji.id == '814968693981184030').users.remove(user)
-    })
-    .catch(err => console.log(err))
+    }).catch(err => console.log(err))
 
-    await ticketPurchase(user, channel).catch(err => console.log(err))
+    await ticketPurchase(user, channel, logs).catch(err => console.log(err))
 
-    awaitRaffleReaction(message, channel, filter)
+    awaitRaffleReaction(message, channel, filter, logs)
 }
 
-async function ticketPurchase(user, channel) {
+async function ticketPurchase(user, channel, logs) {
     let raffle = await database.getRaffle();
     let tickets = raffle.tickets_per_user
     let available = raffle.max_tickets
 
     // If user already bought max tickets
-    if (tickets.includes(user.id) && tickets[user.id] >= raffle.max_tickets) {
+    if (user.id in tickets && tickets[user.id] >= raffle.max_tickets) {
         await channel.send("You already purchased the max number of tickets")
         .then(async message => {
+            console.log('before timer 2')
             const wait = delay => new Promise(resolve => setTimeout(resolve, delay));
             await wait(5000);
+
+            console.log('FUCK')
             await message.delete()
         })
+        return
 
     // If user already bought tickets, but isn't maxed
-    } else if (tickets.includes(user.id) && tickets[user.id] < raffle.max_tickets) {
+    } else if (user.id in tickets && tickets[user.id] < raffle.max_tickets) {
         available -= tickets[user.id]
     }
 
-    await channel.send("<@" + user.id + "> You can purchase " + available + " tickets. How many tickets would you like to purchase? Your balance is: **"
+    await channel.send("<@" + user.id + "> You can purchase **" + available + "** tickets. How many tickets would you like to purchase? Your balance is: **"
                 + await database.getCurrency(user.id)
                 + "** <:HentaiCoin:814968693981184030>.\n You can type 'all' to purchase as many tickets as you can afford.")
     .then(async message => {
@@ -123,21 +126,24 @@ async function ticketPurchase(user, channel) {
         // How many tickets does user want to buy?
         await channel.awaitMessages(filter, { max: 1, time: 30000, errors: ['time'] })
         .then(async collected => {
-            console.log(user.id + "     " + collected.first().content + "      " + await database.getCurrency(user.id))
-
+            
             // Handles valid input and currency charge
-            let response = await calculateCurrency(raffle, channel, collected, user);
+            let response = await calculateCurrency(raffle, channel, collected, user, logs);
 
             const wait = delay => new Promise(resolve => setTimeout(resolve, delay));
             await wait(5000);
 
+            console.log('before')
             // Delete all user messages
             await channel.messages.fetch(collected.first().id)
             .then(m => m.delete())
             .catch(err => console.log(err))
 
+            console.log('after')
+
             await collected.delete()
 
+            console.log('afterafter')
             await response.delete()
         })
         .catch(err => console.log(err))
@@ -146,7 +152,7 @@ async function ticketPurchase(user, channel) {
     .catch(err => console.log(err))
 }
 
-async function calculateCurrency(raffle, channel, message, user) {
+async function calculateCurrency(raffle, channel, message, user, logs) {
     let wallet = await database.getCurrency(user.id);
 
     // If input is not a valid number
@@ -167,12 +173,24 @@ async function calculateCurrency(raffle, channel, message, user) {
 
     // If user enters 'all'
     let remaining;
-    let max = Math.min(raffle.max_tickets, Math.trunc(wallet/raffle.cost_per_ticket));
+    let purchased = await database.getTicketsPurchased(user.id);
+    let max = Math.min(raffle.max_tickets - purchased, Math.trunc(wallet/raffle.cost_per_ticket));
     if (message.first().content == "all") {
         remaining = wallet - (max * raffle.cost_per_ticket);
 
+        // Logs of the transaction
+        logs.send(user.id + "     Amount: " + max + "     Cost/T: " + raffle.cost_per_ticket +
+                    "\nWallet B/A: " + wallet + " | " + remaining)
+
+        // Subtract from User's wallet
         //database.removeCurrency(user, max * raffle.cost_per_ticket)
 
+        // Add to tickets_per_user array
+        //database.addTicketsPurchased(user.id, max)
+
+        // Add to all_tickets
+        //database.addAllTickets(user.id, max)
+        
         return await channel.send("You purchased a total of " + max + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
         .then(message => {return message})
     }
@@ -180,12 +198,22 @@ async function calculateCurrency(raffle, channel, message, user) {
     // If user enters a valid number
     let amount = Math.trunc(parseInt(message.first().content));
     if (amount > max) {
-        return await channel.send("You don't have enough <:HentaiCoin:814968693981184030>. Broke ass bitch")
+        return await channel.send("Please check again how many <:HentaiCoin:814968693981184030> you can purchase")
         .then(message => {return message})
     } else {
         remaining = wallet - (amount * raffle.cost_per_ticket);
 
+        logs.send(user.id + "     Amount: " + amount + "     Cost/T: " + raffle.cost_per_ticket +
+                 "\nWallet B/A: " + wallet + " | " + remaining)
+
+        // Subtract from User's wallet
         //database.removeCurrency(user, amount * raffle.cost_per_ticket)
+
+        // Add to tickets_per_user array
+        //database.addTicketsPurchased(user.id, amount)
+
+        // Add to all_tickets
+        //database.addAllTickets(user.id, amount)
 
         return await channel.send("You purchased a total of " + amount + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
         .then(message => {return message})

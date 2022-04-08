@@ -139,7 +139,6 @@ async function getCurrency(id) {
 async function getRaffle() {
     let raffleID = await (await db.collection('raffles').doc('metadata').get()).data().raffle_id;
 
-    //console.log(raffleID)
 
     let raffle = await db.collection('raffles').doc(raffleID.toString());
     let doc = await raffle.get();
@@ -179,10 +178,65 @@ async function checkNotif(id) {
         return true
 }
 
+async function getAllTickets() {
+    let raffle = await raffleID()
+    let doc = await raffle.get()
+    let data = doc.data()
+
+    return data.all_tickets
+}
+
+async function addAllTickets(id, amount) {
+    let raffle = await raffleID()
+    let doc = await raffle.get()
+    let data = doc.data()
+    let AT = data.all_tickets
+
+    for (let i = 0; i < amount; i++) {
+        AT.push(id)
+    }
+
+    await raffle.update({
+        all_tickets: AT
+    }).catch(err => {
+        console.log(err)
+    })
+}
+
+async function getTicketsPurchased(id) {
+    let raffle = await raffleID()
+    let doc = await raffle.get();
+    let data = doc.data()
+
+    if (id in data.tickets_per_user)
+        return data.tickets_per_user[id]
+    else
+        return 0
+}
+
+async function addTicketsPurchased(id, amount) {
+    let raffle = await raffleID()
+    let doc = await raffle.get()
+    let data = doc.data()
+
+    let TPU = data.tickets_per_user
+    if (id in TPU)
+        TPU[id] += amount
+    else
+        TPU[id] = amount
+
+    await raffle.update({
+        tickets_per_user: TPU
+    }).catch(err => {
+        console.log(err)
+    })
+}
+
 async function disableReceipt(id) {
     const notif = await db.collection('notification').doc(id)
 
     const doc = await notif.get()
+
     if (!doc.exists) {
         await notif.set({
             userID: id
@@ -201,6 +255,13 @@ async function enableReceipt(id) {
     }
 }
 
+async function raffleID() {
+    let raffleID = await (await db.collection('raffles').doc('metadata').get()).data().raffle_id;
+    let raffle = await db.collection('raffles').doc(raffleID.toString());
+
+    return raffle
+}
+
 module.exports = {
     addCurrency : addCurrency,
     removeCurrency : removeCurrency,
@@ -210,6 +271,10 @@ module.exports = {
     getTopWallets : getTopWallets,
     setTimeJoined : setTimeJoined,
     getTimeJoined : getTimeJoined,
+    getAllTickets : getAllTickets,
+    addAllTickets : addAllTickets,
+    getTicketsPurchased : getTicketsPurchased,
+    addTicketsPurchased : addTicketsPurchased,
     disableReceipt : disableReceipt,
     enableReceipt : enableReceipt,
     checkNotif : checkNotif
