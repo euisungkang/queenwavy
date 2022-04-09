@@ -2,7 +2,6 @@ const Discord = require('discord.js');
 const database = require('./firebaseSDK');
 const cron = require('node-cron')
 const raffle = require('./raffle.js');
-const { setTimeJoined } = require('./firebaseSDK');
 const client = new Discord.Client();
 
 //client.login('ls');
@@ -16,13 +15,14 @@ client.on('ready', async () => {
     //Command channel
     let channel = await client.channels.fetch('794722902003941417')
 
-    let raffle_channel = await client.channels.fetch('824718105989218349')
+    let raffle_channel = await client.channels.fetch('962308831944265768')
     let raffle_logs = await client.channels.fetch('961870235542106162')
+    let raffle_winner = await client.channels.fetch('962365291109707797')
 
-    //let status_msg = await raffle_channel.messages.fetch('824718440476311562')
-    //status_msg.edit("__**Raffle Status: **__\n```diff\n- Offline\n```")
+    // let status_msg = await raffle_channel.messages.fetch('962309541477875712')
+    // status_msg.edit("__**Raffle Status: **__\n```diff\n- Offline\n```")
 
-    initializeRaffle(raffle_channel, raffle_logs)
+    initializeRaffle(raffle_channel, raffle_logs, raffle_winner)
 
     //sendReceipt('237018129664966656')
 });
@@ -279,14 +279,19 @@ async function enableReceipts(msg) {
     msg.delete()
 }
 
-async function initializeRaffle(channel, logs) {
+async function initializeRaffle(channel, logs, winnerChannel) {
     let msg = await raffle.updateRaffle(channel);
 
     msg.react('<:HentaiCoin:814968693981184030>');
     const filter = (reaction, user) => reaction.emoji.id == '814968693981184030' && user.id != msg.author.id
     raffle.awaitRaffleReaction(msg, channel, filter, logs);
 
-    raffle.startRaffleTimer(msg);
+    raffle.startRaffleTimer(winnerChannel, msg, sendMessage);
+}
+
+async function sendMessage(ID, message) {
+    let rec = await client.users.cache.get(ID)
+    rec.send(message)
 }
 
 let alts = ['422931223552458764', '799728810261086259', '801683957556838421', '808484429038092298', '775501860123574322', '161024271827599360', '638887290751549443', '485471519162499075']

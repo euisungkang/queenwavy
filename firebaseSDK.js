@@ -138,14 +138,19 @@ async function getCurrency(id) {
 
 async function getRaffle() {
     let raffleID = await (await db.collection('raffles').doc('metadata').get()).data().raffle_id;
-
-
     let raffle = await db.collection('raffles').doc(raffleID.toString());
     let doc = await raffle.get();
 
     return doc.data();
 }
 
+async function getRaffleName() {
+    let raffle = await raffleID()
+    let doc = await raffle.get()
+    let data = doc.data()
+
+    return data.name
+}
 
 async function getTopWallets() {
     const wallets = await db.collection('wallets').get();
@@ -201,6 +206,16 @@ async function addAllTickets(id, amount) {
     }).catch(err => {
         console.log(err)
     })
+}
+
+async function getAllCandidates() {
+    let raffle = await raffleID()
+    let doc = await raffle.get()
+    let data = doc.data()
+
+    let candidates = Object.keys(data.tickets_per_user)
+
+    return candidates
 }
 
 async function getTicketsPurchased(id) {
@@ -273,6 +288,8 @@ module.exports = {
     getTimeJoined : getTimeJoined,
     getAllTickets : getAllTickets,
     addAllTickets : addAllTickets,
+    getRaffleName : getRaffleName,
+    getAllCandidates : getAllCandidates,
     getTicketsPurchased : getTicketsPurchased,
     addTicketsPurchased : addTicketsPurchased,
     disableReceipt : disableReceipt,
