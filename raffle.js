@@ -285,6 +285,8 @@ async function pickWinner(channel) {
 
     let winner = allTickets[Math.floor(Math.random() * allTickets.length)];
 
+    let winnerTicketsPurchased = await database.getTicketsPurchased(winner);
+
     const wait = delay => new Promise(resolve => setTimeout(resolve, delay));
 
     let text = "@everyone The winner's draw for **" + raffleName + "** is starting\n🔀 Shuffling all **" + allTickets.length + "** tickets\n"
@@ -324,7 +326,7 @@ async function pickWinner(channel) {
     msg.edit(text)
     await wait(5000)
 
-    text += "\n\n**<@" + winner + ">** Congratulations! \n*The prize will be distributed shortly*"
+    text += "\n\n**<@" + winner + ">** with " + winnerTicketsPurchased + " tickets. Congratulations!  \n*The prize will be distributed shortly*"
     msg.edit(text)
 
     database.setWinner()
