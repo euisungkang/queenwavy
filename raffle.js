@@ -53,23 +53,18 @@ async function updateRaffle(channel) {
 async function startRaffleTimer(winnerChannel, msg, sendRaffleAlert) {
     let r = await database.getRaffle();
     let timeLeft = getRawTime(r);
-    let time = new Date(r.CD.toDate().getTime()).toLocaleString()   
 
     interval = setInterval(async () => {
-
-        let embed = await getEmbed(r)
         timeLeft -= 5000;
 
-        embed.fields.forEach(field => {
-
-            if (field.name == "Countdown Until Raffle Draw")
-                field.value = "```fix\n" + timeFormat(timeLeft) + "\n```*" + time + "*"
-        })
+        r = await database.getRaffle();
+        let embed = await getEmbed(r)
 
         if (timeLeft <= 600000 && timeLeft > 595001)
             alertCandidates(sendRaffleAlert)
 
         if (timeLeft <= 0) {
+            console.log('help')
             pickWinner(winnerChannel)
             embed.fields.forEach(field => {
                 if (field.name == "Countdown Until Raffle Draw")
@@ -87,8 +82,8 @@ async function startRaffleTimer(winnerChannel, msg, sendRaffleAlert) {
 
 async function getEmbed(r) {
 
-    let timeleft = await calculateTimer(r);
-    let time = new Date(r.CD.toDate().getTime()).toLocaleString()
+    let timeleft = getRawTime(r);
+    let time = new Date(r.CD.toDate().getTime()).toUTCString()
 
     let embed = await new Discord.MessageEmbed()
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Raffle")
@@ -100,7 +95,7 @@ async function getEmbed(r) {
     .addFields(
         { name: "Total Tickets Purchased So Far: " + r.all_tickets.length , value: '\u200B' },
         { name: "To purchase tickets, click the <:HentaiCoin:814968693981184030> below", value: '\u200B' },
-        { name: "Countdown Until Raffle Draw", value: "```fix\n" + timeleft + "\n```*" + time + "*" }
+        { name: "Countdown Until Raffle Draw", value: "```fix\n" + timeFormat(timeleft) + "\n```*" + time + "*" }
     )
     .setFooter("Sponsored by PronHub", 'https://steamuserimages-a.akamaihd.net/ugc/966474717666996844/124820F71D8D65A2986BE2DAEA1ADAFBC0308A23/')
 
@@ -118,11 +113,7 @@ async function awaitRaffleReaction(message, channel, filter, logs) {
         await message.reactions.cache.find(r => r.emoji.id == '814968693981184030').users.remove(user)
     }).catch(err => console.log(err))
 
-    let response = await ticketPurchase(user, channel, logs).catch(err => console.log(err))
-
-    if (response) {
-        updateRaffle(channel)
-    }
+    await ticketPurchase(user, channel, logs).catch(err => console.log(err))
 
     awaitRaffleReaction(message, channel, filter, logs)
 }
@@ -236,19 +227,19 @@ async function calculateCurrency(raffle, channel, message, user, logs) {
         remaining = wallet - (max * raffle.cost_per_ticket);
 
         // Logs of the transaction
-        logs.send("```" + new Date().toLocaleString() + 
+        logs.send("```" + new Date().toUTCString() + 
                   "\nID: " + user.id + "     Name: " + user.username +
                   "\nAmount: " + max + "     Cost/T: " + raffle.cost_per_ticket +
                   "\nWallet B/A: " + wallet + " | " + remaining + "```")
 
         // Subtract from User's wallet
-        //database.removeCurrency(user, max * raffle.cost_per_ticket)
+        database.removeCurrency(user, max * raffle.cost_per_ticket)
 
         // Add to tickets_per_user array
         database.addTicketsPurchased(user.id, max)
 
         // Add to all_tickets
-        await database.addAllTickets(user.id, max)
+        database.addAllTickets(user.id, max)
         
         buffer = await channel.send("You purchased a total of " + max + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
         await wait(3000)
@@ -266,19 +257,19 @@ async function calculateCurrency(raffle, channel, message, user, logs) {
     } else {
         remaining = wallet - (amount * raffle.cost_per_ticket);
 
-        logs.send("```\n" + new Date().toLocaleString() + 
+        logs.send("```\n" + new Date().toUTCString() + 
                   "\nID: " + user.id + "     Name:" + user.username +
                   "\nAmount: " + amount + "     Cost/T: " + raffle.cost_per_ticket +
                   "\nWallet B/A: " + wallet + " | " + remaining + "\n```")
 
         // Subtract from User's wallet
-        //database.removeCurrency(user, amount * raffle.cost_per_ticket)
+        database.removeCurrency(user, amount * raffle.cost_per_ticket)
 
         //Add to tickets_per_user array
         database.addTicketsPurchased(user.id, amount)
 
         //Add to all_tickets
-        await database.addAllTickets(user.id, amount)
+        database.addAllTickets(user.id, amount)
 
         buffer = await channel.send("You purchased a total of " + amount + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
         await wait(3000)
@@ -350,16 +341,6 @@ function getRawTime(r) {
     return timeleft
 }
 
-function calculateTimer(r) {
-    // Get End Date + Time
-    var countDownDate = r.CD.toDate().getTime()
-
-    var now = new Date().getTime();
-    var timeleft = countDownDate - now;
-
-    return timeFormat(timeleft)
-}
-
 function timeFormat(t) {
     let d = Math.floor(t / (1000 * 60 * 60 * 24));
     let h = Math.floor((t % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -373,7 +354,7 @@ async function alertCandidates(sendRaffleAlert) {
     console.log("Sending alerts")
     let users = await database.getAllCandidates()
     let name = await database.getRaffleName()
-console.log(users)
+
     let embed = await new Discord.MessageEmbed()
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Raffles")
     .setThumbnail('https://cdn.discordapp.com/attachments/824106380222005288/824110141305651240/artworks-000505954353-sqeh0j-t500x500.jpg')

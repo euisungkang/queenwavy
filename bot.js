@@ -5,7 +5,7 @@ const raffle = require('./raffle.js');
 const client = new Discord.Client();
 
 //client.login('ls');
-client.login(process.env.BOT_TOKEN)
+client.login('ODEyOTA0ODY3NDYyNjQzNzEz.YDHipw.FSlm0IYeuFHVBwsblzcOJSQD9QE')
 
 client.on('ready', async () => {
     console.log('help');
