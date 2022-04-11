@@ -4,8 +4,7 @@ const cron = require('node-cron')
 const raffle = require('./raffle.js');
 const client = new Discord.Client();
 
-//client.login('ls');
-client.login('ODEyOTA0ODY3NDYyNjQzNzEz.YDHipw.FSlm0IYeuFHVBwsblzcOJSQD9QE')
+client.login(process.env.BOT_TOKEN)
 
 client.on('ready', async () => {
     console.log('help');
