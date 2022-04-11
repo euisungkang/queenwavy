@@ -53,7 +53,7 @@ async function updateRaffle(channel) {
 async function startRaffleTimer(winnerChannel, msg, sendRaffleAlert) {
     let r = await database.getRaffle();
     let timeLeft = getRawTime(r);
-    let time = new Date(r.CD.toDate().getTime()).toLocaleString()
+    let time = new Date(r.CD.toDate().getTime()).toLocaleString()   
 
     interval = setInterval(async () => {
 
