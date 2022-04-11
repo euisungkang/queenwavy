@@ -55,7 +55,7 @@ async function startRaffleTimer(winnerChannel, msg, sendRaffleAlert) {
     let timeLeft = getRawTime(r);
 
     interval = setInterval(async () => {
-        timeLeft -= 5000;
+        timeLeft -= 10000;
 
         r = await database.getRaffle();
         let embed = await getEmbed(r)
@@ -77,7 +77,7 @@ async function startRaffleTimer(winnerChannel, msg, sendRaffleAlert) {
         }
 
         msg.edit(embed)
-    }, 5000)
+    }, 10000)
 }
 
 async function getEmbed(r) {
