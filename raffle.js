@@ -3,6 +3,21 @@ const Discord = require('discord.js');
 
 let rffID = '962309632527835166';
 
+async function initializeRaffle(channel, logs, winnerChannel, sendMessage) {
+    let winnerFound = await database.getWinner()
+
+    if (winnerFound)
+        return
+
+    let msg = await updateRaffle(channel);
+
+    msg.react('<:HentaiCoin:814968693981184030>');
+    const filter = (reaction, user) => reaction.emoji.id == '814968693981184030' && user.id != msg.author.id
+    awaitRaffleReaction(msg, channel, filter, logs);
+
+    startRaffleTimer(winnerChannel, msg, sendMessage);
+}
+
 async function updateRaffle(channel) {
     console.log("updating raffle")
 
@@ -38,54 +53,56 @@ async function updateRaffle(channel) {
 async function startRaffleTimer(winnerChannel, msg, sendRaffleAlert) {
     let r = await database.getRaffle();
     let timeLeft = getRawTime(r);
+    let time = new Date(r.CD.toDate().getTime()).toLocaleString()
 
-    console.log(new Date().toLocaleString())
+    interval = setInterval(async () => {
 
-    embed = msg.embeds[0]
+        let embed = await getEmbed(r)
+        timeLeft -= 5000;
 
-    interval = setInterval(() => {
-        timeLeft -= 10000;
         embed.fields.forEach(field => {
 
             if (field.name == "Countdown Until Raffle Draw")
-                field.value = "```fix\n" + timeFormat(timeLeft) + "\n```"
+                field.value = "```fix\n" + timeFormat(timeLeft) + "\n```*" + time + "*"
         })
 
-        if (timeLeft <= 600000 && timeLeft > 591000)
+        if (timeLeft <= 600000 && timeLeft > 595001)
             alertCandidates(sendRaffleAlert)
 
         if (timeLeft <= 0) {
-            //pickWinner(winnerChannel)
+            pickWinner(winnerChannel)
             embed.fields.forEach(field => {
                 if (field.name == "Countdown Until Raffle Draw")
                     field.value = "```fix\nclosed\n```"
             })
 
             msg.edit(embed)
+            clearInterval(interval)
             return
         }
 
         msg.edit(embed)
-    }, 10000)
-    console.log("out of loop")
+    }, 5000)
 }
 
 async function getEmbed(r) {
 
-    time = await calculateTimer(r);
+    let timeleft = await calculateTimer(r);
+    let time = new Date(r.CD.toDate().getTime()).toLocaleString()
 
     let embed = await new Discord.MessageEmbed()
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Raffle")
     .setThumbnail('https://i.ibb.co/5kL7hBD/Wavy-Logo.png')
     .setDescription("@everyone A new raffle for **" + r.name + "** is now open! You are free to spend your Hentai Coins <:HentaiCoin:814968693981184030> to buy tickets." 
-                        + "\n```"+ r.description + "```")
+                        + "\n```"+ r.description + "```" +
+                    "\nCost per Ticket:  **" + r.cost_per_ticket + "** <:HentaiCoin:814968693981184030>" +
+                    "\nMax Tickets per Person:  **" + r.max_tickets + "**")
     .addFields(
-        { name: "Cost per Ticket:  " + r.cost_per_ticket, value: '\u200B' },
-        { name: "Max Tickets per Person:  " + r.max_tickets, value: '\u200B' },
+        { name: "Total Tickets Purchased So Far: " + r.all_tickets.length , value: '\u200B' },
         { name: "To purchase tickets, click the <:HentaiCoin:814968693981184030> below", value: '\u200B' },
-        { name: "Countdown Until Raffle Draw", value: "```fix\n" + time + "\n```" }
+        { name: "Countdown Until Raffle Draw", value: "```fix\n" + timeleft + "\n```*" + time + "*" }
     )
-    .setFooter("Sponsored by PornHub", 'https://steamuserimages-a.akamaihd.net/ugc/966474717666996844/124820F71D8D65A2986BE2DAEA1ADAFBC0308A23/')
+    .setFooter("Sponsored by PronHub", 'https://steamuserimages-a.akamaihd.net/ugc/966474717666996844/124820F71D8D65A2986BE2DAEA1ADAFBC0308A23/')
 
     return embed;
 }
@@ -101,7 +118,11 @@ async function awaitRaffleReaction(message, channel, filter, logs) {
         await message.reactions.cache.find(r => r.emoji.id == '814968693981184030').users.remove(user)
     }).catch(err => console.log(err))
 
-    await ticketPurchase(user, channel, logs).catch(err => console.log(err))
+    let response = await ticketPurchase(user, channel, logs).catch(err => console.log(err))
+
+    if (response) {
+        updateRaffle(channel)
+    }
 
     awaitRaffleReaction(message, channel, filter, logs)
 }
@@ -110,20 +131,21 @@ async function ticketPurchase(user, channel, logs) {
     let raffle = await database.getRaffle();
     let tickets = raffle.tickets_per_user
     let available = raffle.max_tickets
-
     let todelete = []
+
+    const wait = delay => new Promise(resolve => setTimeout(resolve, delay));
 
     // If user already bought max tickets
     if (user.id in tickets && tickets[user.id] >= raffle.max_tickets) {
         let max_tix = await channel.send("You already purchased the max number of tickets")
         todelete.push(max_tix)
 
-        const wait = delay => new Promise(resolve => setTimeout(resolve, delay));
+
         await wait(3000);
 
         channel.bulkDelete(todelete)
         
-        return
+        return false
 
     // If user already bought tickets, but isn't maxed
     } else if (user.id in tickets && tickets[user.id] < raffle.max_tickets) {
@@ -146,50 +168,64 @@ async function ticketPurchase(user, channel, logs) {
         return null
     })
     if (collected == null) 
-        return
+        return false
 
     todelete.push(await channel.messages.fetch(collected.first().id))
 
     //Handles valid input and currency charge
     let response = await calculateCurrency(raffle, channel, collected, user, logs);
-    todelete.push(response)
-
-    const wait = delay => new Promise(resolve => setTimeout(resolve, delay));
-    await wait(3000);
 
     channel.bulkDelete(todelete)
+
+    return response
 }
 
 async function calculateCurrency(raffle, channel, message, user, logs) {
 
     let wallet = await database.getCurrency(user.id);
+    
+    const wait = delay => new Promise(resolve => setTimeout(resolve, delay));
+    let buffer = null
 
     // If input is not a valid number
     if(isNaN(message.first().content) && message.first().content != 'all') {
-        return await channel.send("Please enter a valid number <:PogO:804089420020973568>")
-        .then(message => {return message})
+        buffer = await channel.send("Please enter a valid number <:PogO:804089420020973568>")
+        await wait(3000);
+        buffer.delete()
+        return false
 
     // If input is 0
     } else if (parseInt(message.first().content) == 0) {
-        return await channel.send("If you're gonna buy 0 tickets, don't waste my time")
-        .then(message => {return message})
+        buffer = await channel.send("If you're gonna buy 0 tickets, don't waste my time")
+        await wait(3000)
+        buffer.delete()
+        return false
 
     // If user doesn't have enough money to buy at least 1 ticket
     } else if (wallet < raffle.cost_per_ticket) {
-        return await channel.send("You don't have enough <:HentaiCoin:814968693981184030>. Broke ass bitch")
-        .then(message => {return message})
+        buffer = await channel.send("You don't have enough <:HentaiCoin:814968693981184030>. Broke ass bitch")
+        await wait(3000)
+        buffer.delete()
+        return false
 
     } else if (wallet < 0) {
-        if (user.id == '232394108524691457')
-            return await channel.send("Nice try Yuji")
-            .then(message => {return message})
-        else
-            return await channel.send("I don't think negative coins exist")
-            .then(message => {return message})
+        if (user.id == '232394108524691457') {
+            buffer = await channel.send("Nice try Yuji")
+            await wait(3000)
+            buffer.delete()
+            return false
+        } else {
+            buffer = await channel.send("I don't think negative coins exist")
+            await wait(3000)
+            buffer.delete()
+            return false
+        }
 
     } else if (wallet % 1 != 0) {
-        return await channel.send("wtf man")
-        .then(message => {return message})
+        buffer = await channel.send("wtf man")
+        await wait(3000)
+        buffer.delete()
+        return false
     }
 
     // If user enters 'all'
@@ -212,17 +248,21 @@ async function calculateCurrency(raffle, channel, message, user, logs) {
         database.addTicketsPurchased(user.id, max)
 
         // Add to all_tickets
-        database.addAllTickets(user.id, max)
+        await database.addAllTickets(user.id, max)
         
-        return await channel.send("You purchased a total of " + max + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
-        .then(message => {return message})
+        buffer = await channel.send("You purchased a total of " + max + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
+        await wait(3000)
+        buffer.delete()
+        return true
     }
     
     // If user enters a valid number
     let amount = Math.trunc(parseInt(message.first().content));
     if (amount > max) {
-        return await channel.send("Please check again how many <:HentaiCoin:814968693981184030> you can purchase")
-        .then(message => {return message})
+        buffer = await channel.send("Please check again how many <:HentaiCoin:814968693981184030> you can purchase")
+        await wait(3000)
+        buffer.delete()
+        return false
     } else {
         remaining = wallet - (amount * raffle.cost_per_ticket);
 
@@ -238,10 +278,12 @@ async function calculateCurrency(raffle, channel, message, user, logs) {
         database.addTicketsPurchased(user.id, amount)
 
         //Add to all_tickets
-        database.addAllTickets(user.id, amount)
+        await database.addAllTickets(user.id, amount)
 
-        return await channel.send("You purchased a total of " + amount + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
-        .then(message => {return message})
+        buffer = await channel.send("You purchased a total of " + amount + " tickets. Your remaining balance is: " + remaining + " <:HentaiCoin:814968693981184030>")
+        await wait(3000)
+        buffer.delete()
+        return true
     }
 }
 
@@ -294,6 +336,7 @@ async function pickWinner(channel) {
     text += "\n\n**<@" + winner + ">** Congratulations! \n*The prize will be distributed shortly*"
     msg.edit(text)
 
+    database.setWinner()
 
 
 }
@@ -348,8 +391,5 @@ console.log(users)
 }
 
 module.exports = {
-    awaitRaffleReaction : awaitRaffleReaction,
-    updateRaffle : updateRaffle,
-    startRaffleTimer: startRaffleTimer,
-    pickWinner : pickWinner
+    initializeRaffle : initializeRaffle,
 }

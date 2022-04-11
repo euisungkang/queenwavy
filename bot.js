@@ -5,7 +5,7 @@ const raffle = require('./raffle.js');
 const client = new Discord.Client();
 
 //client.login('ls');
-client.login(process.env.BOT_TOKEN)
+client.login('ODEyOTA0ODY3NDYyNjQzNzEz.YDHipw.cEqP07O8kGW-FDvnoJDS---Nxtw')
 
 client.on('ready', async () => {
     console.log('help');
@@ -22,7 +22,7 @@ client.on('ready', async () => {
     // let status_msg = await raffle_channel.messages.fetch('962309541477875712')
     // status_msg.edit("__**Raffle Status: **__\n```diff\n- Offline\n```")
 
-    initializeRaffle(raffle_channel, raffle_logs, raffle_winner)
+    raffle.initializeRaffle(raffle_channel, raffle_logs, raffle_winner, sendMessage)
 
     //sendReceipt('237018129664966656')
 });
@@ -277,16 +277,6 @@ async function enableReceipts(msg) {
     database.enableReceipt(msg.author.id)
 
     msg.delete()
-}
-
-async function initializeRaffle(channel, logs, winnerChannel) {
-    let msg = await raffle.updateRaffle(channel);
-
-    msg.react('<:HentaiCoin:814968693981184030>');
-    const filter = (reaction, user) => reaction.emoji.id == '814968693981184030' && user.id != msg.author.id
-    raffle.awaitRaffleReaction(msg, channel, filter, logs);
-
-    raffle.startRaffleTimer(winnerChannel, msg, sendMessage);
 }
 
 async function sendMessage(ID, message) {

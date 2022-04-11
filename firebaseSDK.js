@@ -277,12 +277,30 @@ async function raffleID() {
     return raffle
 }
 
+async function getWinner() {
+    let raffle = await raffleID()
+    let doc = await raffle.get()
+    let data = doc.data()
+
+    return data.winner
+}
+
+async function setWinner() {
+    let raffle = await raffleID()
+
+    await raffle.update({
+        winner: true
+    })
+}
+
 module.exports = {
     addCurrency : addCurrency,
     removeCurrency : removeCurrency,
     purgeWallet : purgeWallet,
     getCurrency : getCurrency,
     getRaffle : getRaffle,
+    getWinner : getWinner,
+    setWinner : setWinner,
     getTopWallets : getTopWallets,
     setTimeJoined : setTimeJoined,
     getTimeJoined : getTimeJoined,
