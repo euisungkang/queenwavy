@@ -22,7 +22,7 @@ async function addCurrency(m, amount) {
         console.log(doc.data());
     }
 
-    await user.set({
+    await user.update({
         userID: id,
         name: name,
         currency: aggregate_amount
@@ -46,6 +46,7 @@ async function setTimeJoined(m) {
             userID: m.id,
             name: m.username,
             currency: 0,
+            cum: 0,
             time: time
         }).then(() => {
             console.log("Time Added Successfully");
@@ -99,7 +100,7 @@ async function removeCurrency(m, amount) {
         console.log(doc.data());
     }
 
-    await user.set({
+    await user.update({
         userID: id,
         name: name,
         currency: aggregate_amount
@@ -118,7 +119,8 @@ async function purgeWallet(id) {
     await user.set({
         userID: id,
         name: name,
-        currency: 0
+        currency: 0,
+        cum: 0
     }).catch(err => {
         console.log(err)
     })
@@ -131,6 +133,17 @@ async function getCurrency(id) {
     const doc = await user.get();
     if (doc.exists) {
         return doc.data().currency;
+    }
+
+    return 0;
+}
+
+async function getCum(id) {
+    let user = db.collection('wallets').doc(id);
+
+    const doc = await user.get();
+    if (doc.exists) {
+        return doc.data().cum;
     }
 
     return 0;
@@ -293,11 +306,58 @@ async function setWinner() {
     })
 }
 
+async function test() {
+
+    // ME: 237018129664966656
+
+    console.log("In test")
+
+    let id = '237018129664966656'
+
+    //let user = db.collection('wallets').doc(id)
+
+    db.collection('wallets').get().then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+            console.log(doc)
+            doc.ref.update({
+                cum : 0
+            }).catch(err => {
+                console.log(err);
+            })
+        })
+    })
+
+    // await user.update({
+    //     cum : 0
+    // }).then(() => {
+    //     console.log("Document written successfully");
+    // }).catch(err => {
+    //     console.log(err);
+    // })
+}
+
+async function resetMonthlyCoins() {
+    db.collection('wallets').get().then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+            data = doc.data()
+            cum = data.currency + data.cum
+
+            doc.ref.update({
+                cum : cum,
+                currency : 0
+            }).catch(err => {
+                console.log(err);
+            })
+        })
+    })
+}
+
 module.exports = {
     addCurrency : addCurrency,
     removeCurrency : removeCurrency,
     purgeWallet : purgeWallet,
     getCurrency : getCurrency,
+    getCum : getCum,
     getRaffle : getRaffle,
     getWinner : getWinner,
     setWinner : setWinner,
@@ -312,5 +372,7 @@ module.exports = {
     addTicketsPurchased : addTicketsPurchased,
     disableReceipt : disableReceipt,
     enableReceipt : enableReceipt,
-    checkNotif : checkNotif
+    checkNotif : checkNotif,
+    test : test,
+    resetMonthlyCoins : resetMonthlyCoins
 }

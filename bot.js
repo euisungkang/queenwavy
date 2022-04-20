@@ -26,9 +26,15 @@ client.on('ready', async () => {
     //sendReceipt('237018129664966656')
 });
 
-cron.schedule('00 * * * *', async () => {
+// Purge alts every hour
+cron.schedule('20 * * * *', () => {
     purgeAlts();
 })
+
+// Reset monthly coins 
+cron.schedule("* * 1 * *", () => {
+    database.resetMonthlyCoins()
+});
 
 let prefix = '$'
 
@@ -168,6 +174,7 @@ async function giveCommand(args, message) {
 
 async function walletCommand(message) {
     let wallet = await database.getCurrency(message.author.id)
+    let cum = await database.getCum(message.author.id)
 
     var today = new Date();
 
@@ -177,7 +184,8 @@ async function walletCommand(message) {
     let embed = await new Discord.MessageEmbed()
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Wallet")
     .setThumbnail('https://i.ibb.co/5kL7hBD/Wavy-Logo.png')
-    .setDescription("Date: " + date + ". You currently have " + wallet + " <:HentaiCoin:814968693981184030>")
+    .setDescription("*Date: " + date + "*\n\nYour **monthly** coins: " + wallet + " <:HentaiCoin:814968693981184030>" +
+                    "\nYour **cumulative** coins: " + cum + " <:HentaiCoin:814968693981184030>")
 
     message.author.send(embed)
 
@@ -283,7 +291,7 @@ async function sendMessage(ID, message) {
     rec.send(message)
 }
 
-let alts = ['422931223552458764', '799728810261086259', '801683957556838421', '808484429038092298', '775501860123574322', '161024271827599360', '638887290751549443', '485471519162499075']
+let alts = ['772797231971041290', '422931223552458764', '799728810261086259', '801683957556838421', '808484429038092298', '775501860123574322', '161024271827599360', '638887290751549443', '485471519162499075']
 
 async function purgeAlts() {
     // jinmoto2 : 422931223552458764
@@ -294,6 +302,7 @@ async function purgeAlts() {
     // nachomic: 161024271827599360
     // lil majima : 638887290751549443
     // Sedol: 485471519162499075
+    // Yuji: 772797231971041290
     for (let i = 0; i < alts.length; i++) {
         database.purgeWallet(alts[i])
     }

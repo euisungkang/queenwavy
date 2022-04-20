@@ -330,8 +330,6 @@ async function pickWinner(channel) {
     msg.edit(text)
 
     database.setWinner()
-
-
 }
 
 function getRawTime(r) {
