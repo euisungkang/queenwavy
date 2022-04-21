@@ -60,7 +60,7 @@ async function startRaffleTimer(winnerChannel, msg, sendRaffleAlert) {
         r = await database.getRaffle();
         let embed = await getEmbed(r)
 
-        if (timeLeft <= 600000 && timeLeft > 595001)
+        if (timeLeft <= 600000 && timeLeft > 590001)
             alertCandidates(sendRaffleAlert)
 
         if (timeLeft <= 0) {
