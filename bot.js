@@ -252,6 +252,7 @@ async function calculateTimeSpent(oldMember, channelID) {
 
 async function sendReceipt(member, time, amount) {
     let wallet = await database.getCurrency(member.member.user.id)
+    let cum = await database.getCum(member.member.user.id)
 
     var today = new Date();
 
@@ -273,7 +274,8 @@ async function sendReceipt(member, time, amount) {
     .setDescription("**" + date + "**" + 
                     "\nSession Length: **" + timeFormat + "**" + 
                     "\n\nCoins made this session: " + amount + " <:HentaiCoin:814968693981184030>" +
-                    "\n**Total balance**: " + (wallet + amount) + " <:HentaiCoin:814968693981184030>" +
+                    "\n**Total monthly balance**: " + (wallet + amount) + " <:HentaiCoin:814968693981184030>" +
+                    "\n**Cumulative balance**: " + (cum + wallet + amount) + "<:HentaiCoin:814968693981184030>" +
                     "\n\nTo disable automatic updates after every session:" +
                     "\n\xa0\xa0\xa0\xa0\xa0type **$disable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
                     "\n\nTo enable this feature again:" +
