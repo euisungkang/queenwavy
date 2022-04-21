@@ -48,7 +48,7 @@ async function setTimeJoined(m) {
             cum: 0,
             time: time
         }).then(() => {
-            console.log("Time Added Successfully");
+            console.log("Time Added Successfully. User first time");
         }).catch(err => {
             console.log(err);
         })
@@ -305,36 +305,6 @@ async function setWinner() {
     })
 }
 
-async function test() {
-
-    // ME: 237018129664966656
-
-    console.log("In test")
-
-    let id = '237018129664966656'
-
-    //let user = db.collection('wallets').doc(id)
-
-    db.collection('wallets').get().then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-            console.log(doc)
-            doc.ref.update({
-                cum : 0
-            }).catch(err => {
-                console.log(err);
-            })
-        })
-    })
-
-    // await user.update({
-    //     cum : 0
-    // }).then(() => {
-    //     console.log("Document written successfully");
-    // }).catch(err => {
-    //     console.log(err);
-    // })
-}
-
 async function resetMonthlyCoins() {
     db.collection('wallets').get().then(querySnapshot => {
         querySnapshot.forEach(doc => {
@@ -372,6 +342,5 @@ module.exports = {
     disableReceipt : disableReceipt,
     enableReceipt : enableReceipt,
     checkNotif : checkNotif,
-    test : test,
     resetMonthlyCoins : resetMonthlyCoins
 }

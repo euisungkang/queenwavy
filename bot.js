@@ -12,7 +12,7 @@ client.on('ready', async () => {
     purgeAlts();
 
     //Command channel
-    let channel = await client.channels.fetch('794722902003941417')
+    //let channel = await client.channels.fetch('794722902003941417')
 
     let raffle_channel = await client.channels.fetch('962308831944265768')
     let raffle_logs = await client.channels.fetch('961870235542106162')
@@ -22,8 +22,6 @@ client.on('ready', async () => {
     // status_msg.edit("__**Raffle Status: **__\n```diff\n- Offline\n```")
 
     raffle.initializeRaffle(raffle_channel, raffle_logs, raffle_winner, sendMessage)
-
-    //sendReceipt('237018129664966656')
 });
 
 // Purge alts every hour
@@ -32,9 +30,9 @@ cron.schedule('20 * * * *', () => {
 })
 
 // Reset monthly coins 
-cron.schedule("* * 1 * *", () => {
-    database.resetMonthlyCoins()
-});
+// cron.schedule("* * 1 * *", () => {
+//     database.resetMonthlyCoins()
+// });
 
 let prefix = '$'
 
@@ -63,7 +61,7 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
     let newUserChannel = newMember.channel;
 
     // If user enters a channel for the first time
-    if (oldUserChannel === null && newUserChannel != null && !(await isBot(id))) {
+    if (oldUserChannel == null && newUserChannel != null && !(await isBot(id))) {
 
         // Category ID of arcade: 687839393444397111
         // Category ID of Wavy: 816565807693824031
@@ -75,7 +73,7 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
         }
 
     // If user exits channels
-    } else if (oldUserChannel != null && newUserChannel === null && !(await isBot(id))) {
+    } else if (oldUserChannel != null && newUserChannel == null && !(await isBot(id))) {
         if (await channelIsValid(oldUserChannel)) {   
             calculateTimeSpent(oldMember, oldUserChannel.parentID)
         }
@@ -89,19 +87,21 @@ client.on('voiceStateUpdate', async (oldMember, newMember) => {
         // If moving from valid to non-valid channel
         if (await channelIsValid(oldUserChannel) && !(await channelIsValid(newUserChannel))) {
             calculateTimeSpent(oldMember, oldUserChannel.parentID);
-            database.setTimeJoined(oldMember.member.user)
         // If moving from non-valid to valid channel
         } else if (!(await channelIsValid(oldUserChannel)) && await channelIsValid(newUserChannel)) {
 
             database.setTimeJoined(oldMember.member.user)
 
-        } else if ((await channelIsValid(oldUserChannel) && await channelIsValid(newUserChannel)) &&
-                  ((oldUserChannel.parentID == '687839393444397111' && newUserChannel.parentID == '816565807693824031') ||
-                   (oldUserChannel.parentID == '816565807693824031' && newUserChannel.parentID == '687839393444397111'))) {
-            await calculateTimeSpent(oldMember, oldUserChannel.parentID);
-            database.setTimeJoined(oldMember.member.user)
-            console.log("Switched to " + oldUserChannel.parentID + " : " + newMember.member.user.username)
         }
+        
+        // General and Private VC condition
+        // else if ((await channelIsValid(oldUserChannel) && await channelIsValid(newUserChannel)) &&
+        //           ((oldUserChannel.parentID == '687839393444397111' && newUserChannel.parentID == '816565807693824031') ||
+        //            (oldUserChannel.parentID == '816565807693824031' && newUserChannel.parentID == '687839393444397111'))) {
+        //     await calculateTimeSpent(oldMember, oldUserChannel.parentID);
+        //     database.setTimeJoined(oldMember.member.user)
+        //     console.log("Switched to " + oldUserChannel.parentID + " : " + newMember.member.user.username)
+        // }
     }
 });
 
@@ -216,19 +216,24 @@ async function calculateTimeSpent(oldMember, channelID) {
     // getTime returns time in seconds
     let diff = (now.getTime() - joined.getTime()) / 1000;
 
-    console.log(diff);
+    console.log(Math.round(diff / 60));
 
-    // Filter out users less than 5 minutes = 5 * 60
+    //Filter out users less than 5 minutes = 5 * 60
     if (diff > (5 * 60)) {
         let amount;
-        if (channelID == '687839393444397111') {
-            amount = Math.floor(diff / (5 * 60));
-            //console.log("in arcade")
+        if (channelID == '687839393444397111' || channelID == '816565807693824031') {
+
+            // Wavy Pay 2 Win
+            if (oldMember.member.premiumSince != null)
+                amount = Math.round(diff / (3 * 60));
+            else
+                amount = Math.round(diff / (5 * 60));
+            //console.log("in arcade + wavy")
         }
-        else if (channelID == '816565807693824031') {
-            amount = Math.floor(diff / (5 * 60));
-            //console.log("in wavy")
-        }
+        // else if (channelID == '816565807693824031') {
+        //     amount = Math.round(diff / (5 * 60));
+        //     //console.log("in wavy")
+        // }
         else {
             amount = 0;
         }
