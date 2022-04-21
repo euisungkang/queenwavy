@@ -7,7 +7,7 @@ const client = new Discord.Client();
 client.login(process.env.BOT_TOKEN_QW)
 
 client.on('ready', async () => {
-    console.log('help');
+    console.log('help im in heroku');
 
     purgeAlts();
 
