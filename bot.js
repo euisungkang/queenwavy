@@ -49,9 +49,9 @@ client.on('message', async message => {
     } else if (cmd == 'enable') {
         enableReceipts(message)
     }
-    // else if (cmd == 'give') {
-    //     giveCommand(args, message)
-    // }
+    else if (cmd == 'give') {
+        giveCommand(args, message)
+    }
 });
 
 client.on('voiceStateUpdate', async (oldMember, newMember) => {
