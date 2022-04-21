@@ -113,7 +113,6 @@ async function errorMessage(message, m) {
     message.delete()
 }
 
-// Forbidden
 async function giveCommand(args, message) {
     console.log(args)
     if (!args[2] || args[3]) {
@@ -134,8 +133,11 @@ async function giveCommand(args, message) {
     if (user == null || source == null) {
         errorMessage(message, "Invalid user to send <:HentaiCoin:814968693981184030>")
         return;
-    } else if (isNaN(amount) || amount < 1) {
+    } else if (isNaN(amount) || amount < 0) {
         errorMessage(message, "Please enter a valid number :unamused:")
+        return;
+    } else if (amount == 0) {
+        errorMessage(message, "No")
         return;
     } else if (user.id == source.id) {
         errorMessage(message, "Can't sent money to yourself <:PepeWHAT:813130771799081030> <:PepeWHAT:813130771799081030> <:PepeWHAT:813130771799081030>")
@@ -154,11 +156,13 @@ async function giveCommand(args, message) {
     database.addCurrency(user, amount)
 
     let embed = await new Discord.MessageEmbed()
+    .setColor('#ff6ad5')
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Transaction Record")
     .setThumbnail('https://i.ibb.co/5kL7hBD/Wavy-Logo.png')
     .setDescription(source.username + " has sent you " + amount + " <:HentaiCoin:814968693981184030>\nYour balance is now " + (wallet + amount) + " <:HentaiCoin:814968693981184030>")
 
     let embed2 = await new Discord.MessageEmbed()
+    .setColor('#ff6ad5')
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Transaction Record")
     .setThumbnail('https://i.ibb.co/5kL7hBD/Wavy-Logo.png')
     .setDescription("You sent " + user.username + " " + amount + " <:HentaiCoin:814968693981184030>\nYour balance is now " + (wallet2 - amount) + " <:HentaiCoin:814968693981184030>")

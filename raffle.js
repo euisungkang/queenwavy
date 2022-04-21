@@ -52,13 +52,10 @@ async function updateRaffle(channel) {
 
 async function startRaffleTimer(winnerChannel, msg, sendRaffleAlert) {
     let r = await database.getRaffle();
+    let embed = await getEmbed(r)
     let timeLeft = getRawTime(r);
 
     interval = setInterval(async () => {
-        timeLeft -= 10000;
-
-        r = await database.getRaffle();
-        let embed = await getEmbed(r)
 
         if (timeLeft <= 600000 && timeLeft > 590001)
             alertCandidates(sendRaffleAlert)
@@ -77,6 +74,12 @@ async function startRaffleTimer(winnerChannel, msg, sendRaffleAlert) {
         }
 
         msg.edit(embed)
+
+        r = await database.getRaffle();
+        embed = await getEmbed(r, embed)
+
+        timeLeft -= 10000;
+
     }, 10000)
 }
 
@@ -86,10 +89,11 @@ async function getEmbed(r) {
     let time = new Date(r.CD.toDate().getTime()).toUTCString()
 
     let embed = await new Discord.MessageEmbed()
+    .setColor('#ff6ad5')
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Raffle")
     .setThumbnail('https://i.ibb.co/5kL7hBD/Wavy-Logo.png')
-    .setDescription("@everyone A new raffle for **" + r.name + "** is now open! You are free to spend your Hentai Coins <:HentaiCoin:814968693981184030> to buy tickets." 
-                        + "\n```"+ r.description + "```" +
+    .setDescription("@everyone A new raffle is open!\n**" + r.name + "**\nYou are free to spend your Hentai Coins <:HentaiCoin:814968693981184030> to buy tickets." 
+                        + "\n```\n"+ r.description.replace(/\\n/g, "\n") + "\n```" +
                     "\nCost per Ticket:  **" + r.cost_per_ticket + "** <:HentaiCoin:814968693981184030>" +
                     "\nMax Tickets per Person:  **" + r.max_tickets + "**")
     .addFields(
@@ -228,6 +232,7 @@ async function calculateCurrency(raffle, channel, message, user, logs) {
 
         // Logs of the transaction
         logs.send("```" + new Date().toUTCString() + 
+                  "\nRaffle: " + raffle.name +
                   "\nID: " + user.id + "     Name: " + user.username +
                   "\nAmount: " + max + "     Cost/T: " + raffle.cost_per_ticket +
                   "\nWallet B/A: " + wallet + " | " + remaining + "```")
@@ -258,6 +263,7 @@ async function calculateCurrency(raffle, channel, message, user, logs) {
         remaining = wallet - (amount * raffle.cost_per_ticket);
 
         logs.send("```\n" + new Date().toUTCString() + 
+                  "\nRaffle: " + raffle.name +
                   "\nID: " + user.id + "     Name:" + user.username +
                   "\nAmount: " + amount + "     Cost/T: " + raffle.cost_per_ticket +
                   "\nWallet B/A: " + wallet + " | " + remaining + "\n```")
