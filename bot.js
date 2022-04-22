@@ -298,21 +298,51 @@ async function sendReceipt(member, time, amount) {
                     "\n**Total monthly balance**: " + (wallet + amount) + " <:HentaiCoin:814968693981184030>" +
                     "\n**Cumulative balance**: " + (cum + wallet + amount) + "<:HentaiCoin:814968693981184030>" +
                     "\n\nTo disable automatic updates after every session:" +
-                    "\n\xa0\xa0\xa0\xa0\xa0type **$disable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
+                    "\n\xa0\xa0\xa0\xa0\xa0Type **$disable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
                     "\n\nTo enable this feature again:" +
-                    "\n\xa0\xa0\xa0\xa0\xa0type **$enable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
+                    "\n\xa0\xa0\xa0\xa0\xa0Type **$enable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
                     "\n\n*Commands typed in this DM will not work*")
 
     message = await member.member.send(embed)
 }
 
 async function disableReceipts(msg) {
+    var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+
+    let embed = await new Discord.MessageEmbed()
+    .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Notice")
+    .setThumbnail('https://cdn.discordapp.com/app-icons/812904867462643713/c3713856eae103c4cad96111e26bce21.png?size=512')
+    .setDescription("**" + date + "**" +
+                    "\nYou have enabled coin receipts.\nYou will continue receiving receipts after every voice channel session" +
+                    "\n\nTo disable automatic receipts:" +
+                    "\n\xa0\xa0\xa0\xa0\xa0Type **$disable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
+                    "\n\nTo enable this feature again:" +
+                    "\n\xa0\xa0\xa0\xa0\xa0Type **$enable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
+                    "\n\n*Commands typed in this DM will not work*")
+
+    msg.author.send(embed)
+    
     database.disableReceipt(msg.author.id)
 
     msg.delete()
 }
 
 async function enableReceipts(msg) {
+    var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+
+    let embed = await new Discord.MessageEmbed()
+    .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Notice")
+    .setThumbnail('https://cdn.discordapp.com/app-icons/812904867462643713/c3713856eae103c4cad96111e26bce21.png?size=512')
+    .setDescription("**" + date + "**" +
+                    "\nYou have enabled coin receipts.\nYou will continue receiving receipts after every voice channel session" +
+                    "\n\nTo disable automatic receipts:" +
+                    "\n\xa0\xa0\xa0\xa0\xa0Type **$disable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
+                    "\n\nTo enable this feature again:" +
+                    "\n\xa0\xa0\xa0\xa0\xa0Type **$enable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
+                    "\n\n*Commands typed in this DM will not work*")
+
+    msg.author.send(embed)
+
     database.enableReceipt(msg.author.id)
 
     msg.delete()
