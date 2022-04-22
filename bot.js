@@ -9,7 +9,7 @@ client.login(process.env.BOT_TOKEN_QW)
 client.on('ready', async () => {
     console.log('help im in heroku');
 
-    purgeAlts();
+    client.user.setActivity("$help", { type: "LISTENING" })
 
     //Command channel
     //let channel = await client.channels.fetch('794722902003941417')
@@ -51,6 +51,8 @@ client.on('message', async message => {
     }
     else if (cmd == 'give') {
         giveCommand(args, message)
+    } else if (cmd == 'help') {
+        helpCommand(message)
     }
 });
 
@@ -111,6 +113,25 @@ async function errorMessage(message, m) {
     await wait(3000);
     err.delete()
     message.delete()
+}
+
+async function helpCommand(message) {
+    let replyChannel = await client.channels.fetch(message.channel.id)
+
+    let embed = await new Discord.MessageEmbed()
+    .setColor('#ff6ad5')
+    .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Bot Commands")
+    .setThumbnail('https://cdn.discordapp.com/app-icons/812904867462643713/c3713856eae103c4cad96111e26bce21.png?size=512')
+    .addFields(
+        { name: "$guide", value: "Guide to important channels. Use if you have questions or are new"},
+        { name: "$wallet", value: "Tells you how many coins you have"},
+        { name: "$give <@recipient> <amount>", value: "Transfer coins to others. **Don't include <> on use**"},
+        { name: "$enable", value: "Enables DM coin receipts after every voice channel session: *default*"},
+        { name: "$disable", value: "Disables DM coin receipts after every voice channel session"}
+    )
+    .setFooter('Type commands in any  𝓦 𝓪 𝓿 𝔂  text channel');
+
+    return await replyChannel.send(embed)
 }
 
 async function giveCommand(args, message) {
