@@ -307,6 +307,7 @@ async function sendReceipt(member, time, amount) {
 }
 
 async function disableReceipts(msg) {
+    var today = new Date();
     var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
 
     let embed = await new Discord.MessageEmbed()
@@ -328,6 +329,7 @@ async function disableReceipts(msg) {
 }
 
 async function enableReceipts(msg) {
+    var today = new Date();
     var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
 
     let embed = await new Discord.MessageEmbed()
