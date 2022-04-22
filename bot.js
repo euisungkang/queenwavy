@@ -314,7 +314,7 @@ async function disableReceipts(msg) {
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Notice")
     .setThumbnail('https://cdn.discordapp.com/app-icons/812904867462643713/c3713856eae103c4cad96111e26bce21.png?size=512')
     .setDescription("**" + date + "**" +
-                    "\nYou have enabled coin receipts.\nYou will now receive automatic receipts after a voice session" +
+                    "\nYou have disabled coin receipts.\nYou will **not** receive automatic receipts after a voice session" +
                     "\n\nTo disable automatic receipts:" +
                     "\n\xa0\xa0\xa0\xa0\xa0Type **$disable** in any【 𝓦 𝓪 𝓿 𝔂 】text channel" +
                     "\n\nTo enable this feature again:" +
