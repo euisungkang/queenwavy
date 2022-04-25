@@ -190,7 +190,7 @@ async function calculateCurrency(raffle, channel, message, user, logs) {
         return false
 
     // If input is 0
-    } else if (parseInt(message.first().content) == 0) {
+    } else if (Number(message.first().content) == 0) {
         buffer = await channel.send("If you're gonna buy 0 tickets, don't waste my time")
         await wait(3000)
         buffer.delete()
@@ -203,7 +203,7 @@ async function calculateCurrency(raffle, channel, message, user, logs) {
         buffer.delete()
         return false
 
-    } else if (parseInt(message.first().content) < 0) {
+    } else if (Number(message.first().content) < 0) {
         if (user.id == '232394108524691457') {
             buffer = await channel.send("Nice try Yuji")
             await wait(3000)
@@ -216,7 +216,7 @@ async function calculateCurrency(raffle, channel, message, user, logs) {
             return false
         }
 
-    } else if (parseInt(message.first().content) % 1 != 0) {
+    } else if (Number(message.first().content) % 1.0 != 0.0) {
         buffer = await channel.send("wtf man")
         await wait(3000)
         buffer.delete()
@@ -253,7 +253,7 @@ async function calculateCurrency(raffle, channel, message, user, logs) {
     }
     
     // If user enters a valid number
-    let amount = Math.trunc(parseInt(message.first().content));
+    let amount = Number(message.first().content);
     if (amount > max) {
         buffer = await channel.send("Please check again how many <:HentaiCoin:814968693981184030> you can purchase")
         await wait(3000)
