@@ -125,7 +125,12 @@ async function awaitRaffleReaction(message, channel, filter, logs) {
 async function ticketPurchase(user, channel, logs) {
     let raffle = await database.getRaffle();
     let tickets = raffle.tickets_per_user
-    let available = raffle.max_tickets
+    
+    let max_user = Math.trunc(await database.getCurrency(user.id) / raffle.cost_per_ticket)
+    let available = raffle.max_tickets;
+    if (max_user < raffle.max_tickets)
+        available = max_user
+
     let todelete = []
 
     const wait = delay => new Promise(resolve => setTimeout(resolve, delay));
@@ -135,7 +140,6 @@ async function ticketPurchase(user, channel, logs) {
         let max_tix = await channel.send("You already purchased the max number of tickets")
         todelete.push(max_tix)
 
-
         await wait(3000);
 
         channel.bulkDelete(todelete)
@@ -143,11 +147,21 @@ async function ticketPurchase(user, channel, logs) {
         return false
 
     // If user already bought tickets, but isn't maxed
+    } else if (available == 0) {
+        let max_tix = await channel.send("You can't even afford one ticket <:PepePathetic:804088638140710922>")
+        todelete.push(max_tix)
+
+        await wait(3000);
+
+        channel.bulkDelete(todelete)
+        
+        return false
+
     } else if (user.id in tickets && tickets[user.id] < raffle.max_tickets) {
         available -= tickets[user.id]
     }
 
-    let amount = await channel.send("<@" + user.id + "> You can purchase **" + available + "** tickets. How many tickets would you like to purchase? Your balance is: **"
+    let amount = await channel.send("<@" + user.id + "> You can purchase **" + available + "** ticket(s). How many tickets would you like to purchase? Your balance is: **"
                 + await database.getCurrency(user.id)
                 + "** <:HentaiCoin:814968693981184030>.\n You can type 'all' to purchase as many tickets as you can afford.")
     todelete.push(amount)
