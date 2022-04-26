@@ -127,9 +127,7 @@ async function ticketPurchase(user, channel, logs) {
     let tickets = raffle.tickets_per_user
     
     let max_user = Math.trunc(await database.getCurrency(user.id) / raffle.cost_per_ticket)
-    let available = raffle.max_tickets;
-    if (max_user < raffle.max_tickets)
-        available = max_user
+    let available = Math.min(max_user, raffle.max_tickets);
 
     let todelete = []
 
@@ -158,7 +156,7 @@ async function ticketPurchase(user, channel, logs) {
         return false
 
     } else if (user.id in tickets && tickets[user.id] < raffle.max_tickets) {
-        available -= tickets[user.id]
+        available = Math.min(available, raffle.max_tickets - tickets[user.id])
     }
 
     let amount = await channel.send("<@" + user.id + "> You can purchase **" + available + "** ticket(s). How many tickets would you like to purchase? Your balance is: **"
