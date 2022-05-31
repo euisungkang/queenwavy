@@ -29,10 +29,10 @@ cron.schedule('20 * * * *', () => {
     purgeAlts();
 })
 
-// Reset monthly coins 
-// cron.schedule("* * 1 * *", () => {
-//     database.resetMonthlyCoins()
-// });
+//Reset monthly coins 
+cron.schedule("00 0 1 * *", () => {
+    database.resetMonthlyCoins()
+});
 
 let prefix = '$'
 
