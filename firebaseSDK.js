@@ -1,7 +1,9 @@
 const admin = require("firebase-admin");
 
 admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(process.env.DBAuth)),
+  credential: admin.credential.cert(
+    JSON.parse(Buffer.from(process.env.DBAuth, "base64").toString("ascii"))
+  ),
 });
 
 let db = admin.firestore();
@@ -174,6 +176,13 @@ async function getRaffle() {
   ).data().raffle_id;
   let raffle = await db.collection("raffles").doc(raffleID.toString());
   let doc = await raffle.get();
+
+  return doc.data();
+}
+
+async function getTeam() {
+  let team = await db.collection("team").doc("queen");
+  let doc = await team.get();
 
   return doc.data();
 }
@@ -358,6 +367,7 @@ module.exports = {
   getCurrency: getCurrency,
   getCum: getCum,
   getRaffle: getRaffle,
+  getTeam: getTeam,
   getWinner: getWinner,
   setWinner: setWinner,
   getTopWallets: getTopWallets,

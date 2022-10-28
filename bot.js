@@ -1,8 +1,14 @@
-const Discord = require("discord.js");
+const { Client, GatewayIntentBits } = require("discord.js");
 const database = require("./firebaseSDK");
 const cron = require("node-cron");
 const raffle = require("./raffle.js");
-const client = new Discord.Client();
+const team = require("./team.js");
+const client = new Client({
+  intents: GatewayIntentBits.Guilds,
+  intents: GatewayIntentBits.GuildMessages,
+  intents: GatewayIntentBits.MessageContent,
+  intents: GatewayIntentBits.GuildVoiceStates,
+});
 
 client.login(process.env.BOT_TOKEN_QW);
 
@@ -27,6 +33,12 @@ client.on("ready", async () => {
     raffle_winner,
     sendMessage
   );
+
+  // Teams Channel ID: 1028295941188501525
+
+  let team_channel = await client.channels.fetch("1028295941188501525");
+
+  team.initializeTeam(team_channel);
 });
 
 // Purge alts every hour
