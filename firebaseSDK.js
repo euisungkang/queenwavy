@@ -174,14 +174,14 @@ async function getRaffle() {
   let raffleID = await (
     await db.collection("raffles").doc("metadata").get()
   ).data().raffle_id;
-  let raffle = await db.collection("raffles").doc(raffleID.toString());
+  let raffle = db.collection("raffles").doc(raffleID.toString());
   let doc = await raffle.get();
 
   return doc.data();
 }
 
 async function getTeam() {
-  let team = await db.collection("team").doc("queen");
+  let team = db.collection("team").doc("queen");
   let doc = await team.get();
 
   return doc.data();
@@ -203,9 +203,7 @@ async function getTopWallets() {
     walletmap.set(doc.data().userID, doc.data().currency);
   });
 
-  const sorted = await new Map(
-    [...walletmap.entries()].sort((a, b) => b[1] - a[1])
-  );
+  const sorted = new Map([...walletmap.entries()].sort((a, b) => b[1] - a[1]));
 
   let index = 0;
   for (let k of sorted.keys()) {
@@ -219,7 +217,7 @@ async function getTopWallets() {
 }
 
 async function checkNotif(id) {
-  const notif = await db.collection("notification").doc(id);
+  const notif = db.collection("notification").doc(id);
 
   const doc = await notif.get();
   if (doc.exists) return false;
@@ -291,7 +289,7 @@ async function addTicketsPurchased(id, amount) {
 }
 
 async function disableReceipt(id) {
-  const notif = await db.collection("notification").doc(id);
+  const notif = db.collection("notification").doc(id);
 
   const doc = await notif.get();
 
@@ -307,7 +305,7 @@ async function disableReceipt(id) {
 }
 
 async function enableReceipt(id) {
-  const notif = await db.collection("notification").doc(id);
+  const notif = db.collection("notification").doc(id);
 
   const doc = await notif.get();
   if (doc.exists) {
@@ -319,7 +317,7 @@ async function raffleID() {
   let raffleID = await (
     await db.collection("raffles").doc("metadata").get()
   ).data().raffle_id;
-  let raffle = await db.collection("raffles").doc(raffleID.toString());
+  let raffle = db.collection("raffles").doc(raffleID.toString());
 
   return raffle;
 }

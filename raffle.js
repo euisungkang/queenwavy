@@ -57,7 +57,6 @@ async function startRaffleTimer(winnerChannel, msg, sendRaffleAlert) {
       alertCandidates(sendRaffleAlert);
 
     if (timeLeft <= 0) {
-      console.log("help");
       pickWinner(winnerChannel);
       embed.fields.forEach((field) => {
         if (field.name == "Countdown Until Raffle Draw")
