@@ -1,15 +1,29 @@
-const Discord = require("discord.js");
+const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 const database = require("./firebaseSDK");
 const cron = require("node-cron");
 const raffle = require("./raffle.js");
-const client = new Discord.Client();
+const team = require("./team.js");
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildPresences,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildIntegrations,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates,
+  ],
+});
 
 client.login(process.env.BOT_TOKEN_QW);
 
 client.on("ready", async () => {
   console.log("help im in heroku");
 
-  client.user.setActivity("$help", { type: "LISTENING" });
+  // client.user.setActivity("$help", { type: "LISTENING" });
+  client.user.setPresence({
+    activities: [{ name: "$help", type: "LISTENING" }],
+  });
 
   //Command channel
   //let channel = await client.channels.fetch('794722902003941417')
@@ -27,6 +41,12 @@ client.on("ready", async () => {
     raffle_winner,
     sendMessage
   );
+
+  // Teams Channel ID: 1028295941188501525
+
+  let team_channel = await client.channels.fetch("1028295941188501525");
+
+  team.initializeTeam(team_channel);
 });
 
 // Purge alts every hour
@@ -41,7 +61,7 @@ cron.schedule("00 0 1 * *", () => {
 
 let prefix = "$";
 
-client.on("message", async (message) => {
+client.on("messageCreate", async (message) => {
   if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.trim().split(/ +/g);
@@ -83,7 +103,7 @@ client.on("voiceStateUpdate", async (oldMember, newMember) => {
     !(await isBot(id))
   ) {
     if (await channelIsValid(oldUserChannel)) {
-      calculateTimeSpent(oldMember, oldUserChannel.parentID);
+      calculateTimeSpent(oldMember, oldUserChannel.parentId);
     }
 
     // Moving between channels
@@ -101,7 +121,7 @@ client.on("voiceStateUpdate", async (oldMember, newMember) => {
       (await channelIsValid(oldUserChannel)) &&
       !(await channelIsValid(newUserChannel))
     ) {
-      calculateTimeSpent(oldMember, oldUserChannel.parentID);
+      calculateTimeSpent(oldMember, oldUserChannel.parentId);
       // If moving from non-valid to valid channel
     } else if (
       !(await channelIsValid(oldUserChannel)) &&
@@ -132,7 +152,7 @@ async function errorMessage(message, m) {
 async function helpCommand(message) {
   let replyChannel = await client.channels.fetch(message.channel.id);
 
-  let embed = await new Discord.MessageEmbed()
+  let embed = new EmbedBuilder()
     .setColor("#ff6ad5")
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Bot Commands")
     .setThumbnail(
@@ -159,9 +179,11 @@ async function helpCommand(message) {
         value: "Disables DM coin receipts after every voice channel session",
       }
     )
-    .setFooter("Type commands in any  𝓦 𝓪 𝓿 𝔂  text channel");
+    .setFooter({
+      text: "Type commands in any  𝓦 𝓪 𝓿 𝔂  text channel",
+    });
 
-  return await replyChannel.send(embed);
+  return await replyChannel.send({ embeds: [embed] });
 }
 
 async function giveCommand(args, message) {
@@ -222,7 +244,7 @@ async function giveCommand(args, message) {
   database.removeCurrency(source, amount);
   database.addCurrency(user, amount);
 
-  let embed = await new Discord.MessageEmbed()
+  let embed = new EmbedBuilder()
     .setColor("#ff6ad5")
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Transaction Record")
     .setThumbnail("https://i.ibb.co/5kL7hBD/Wavy-Logo.png")
@@ -235,7 +257,7 @@ async function giveCommand(args, message) {
         " <:HentaiCoin:814968693981184030>"
     );
 
-  let embed2 = await new Discord.MessageEmbed()
+  let embed2 = new EmbedBuilder()
     .setColor("#ff6ad5")
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Transaction Record")
     .setThumbnail("https://i.ibb.co/5kL7hBD/Wavy-Logo.png")
@@ -249,8 +271,8 @@ async function giveCommand(args, message) {
         " <:HentaiCoin:814968693981184030>"
     );
 
-  user.send(embed);
-  source.send(embed2);
+  user.send({ embeds: [embed] });
+  source.send({ embeds: [embed2] });
 
   let log = await client.channels.fetch("826499502403747921");
   log.send(
@@ -275,7 +297,7 @@ async function walletCommand(message) {
     today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
   //var time = today.getHours() + ":" + today.getMinutes();
 
-  let embed = await new Discord.MessageEmbed()
+  let embed = new EmbedBuilder()
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Wallet")
     .setThumbnail("https://i.ibb.co/5kL7hBD/Wavy-Logo.png")
     .setDescription(
@@ -289,7 +311,7 @@ async function walletCommand(message) {
         " <:HentaiCoin:814968693981184030>"
     );
 
-  message.author.send(embed);
+  message.author.send({ embeds: [embed] });
 
   message.delete();
 }
@@ -305,10 +327,11 @@ async function channelIsValid(channel) {
   // Study: 809345799526809600
   // AFK: 814930846326456420
 
-  let valid = await ((channel.parentID == "687839393444397111" ||
-    channel.parentID == "816565807693824031") &&
+  let valid =
+    (channel.parentId == "687839393444397111" ||
+      channel.parentId == "816565807693824031") &&
     channel.id != "809345799526809600" &&
-    channel.id != "814930846326456420");
+    channel.id != "814930846326456420";
 
   return valid;
 }
@@ -370,7 +393,7 @@ async function sendReceipt(member, time, amount) {
     timeFormat = timeFormat.toISOString().substring(11, 19);
   }
 
-  let embed = await new Discord.MessageEmbed()
+  let embed = new EmbedBuilder()
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Wallet")
     .setThumbnail("https://i.ibb.co/5kL7hBD/Wavy-Logo.png")
     .setDescription(
@@ -396,7 +419,7 @@ async function sendReceipt(member, time, amount) {
         "\n\n*Commands typed in this DM will not work*"
     );
 
-  message = await member.member.send(embed);
+  message = await member.member.send({ embeds: [embed] });
 }
 
 async function disableReceipts(msg) {
@@ -404,7 +427,7 @@ async function disableReceipts(msg) {
   var date =
     today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
 
-  let embed = await new Discord.MessageEmbed()
+  let embed = new EmbedBuilder()
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Notice")
     .setThumbnail(
       "https://cdn.discordapp.com/app-icons/812904867462643713/c3713856eae103c4cad96111e26bce21.png?size=512"
@@ -421,7 +444,7 @@ async function disableReceipts(msg) {
         "\n\n*Commands typed in this DM will not work*"
     );
 
-  msg.author.send(embed);
+  msg.author.send({ embeds: [embed] });
 
   database.disableReceipt(msg.author.id);
 
@@ -433,7 +456,7 @@ async function enableReceipts(msg) {
   var date =
     today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
 
-  let embed = await new Discord.MessageEmbed()
+  let embed = new EmbedBuilder()
     .setTitle("【 𝓦 𝓪 𝓿 𝔂 】  Notice")
     .setThumbnail(
       "https://cdn.discordapp.com/app-icons/812904867462643713/c3713856eae103c4cad96111e26bce21.png?size=512"
@@ -450,7 +473,7 @@ async function enableReceipts(msg) {
         "\n\n*Commands typed in this DM will not work*"
     );
 
-  msg.author.send(embed);
+  msg.author.send({ embeds: [embed] });
 
   database.enableReceipt(msg.author.id);
 
@@ -458,7 +481,7 @@ async function enableReceipts(msg) {
 }
 
 async function sendMessage(ID, message) {
-  let rec = await client.users.cache.get(ID);
+  let rec = client.users.cache.get(ID);
   rec.send(message);
 }
 
