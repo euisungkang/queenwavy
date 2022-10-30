@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
+const { Client, GatewayIntentBits, EmbedBuilder, ActivityType } = require("discord.js");
 const database = require("./firebaseSDK");
 const cron = require("node-cron");
 const raffle = require("./raffle.js");
@@ -12,6 +12,8 @@ const client = new Client({
     GatewayIntentBits.GuildIntegrations,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.DirectMessageReactions
   ],
 });
 
@@ -22,7 +24,7 @@ client.on("ready", async () => {
 
   // client.user.setActivity("$help", { type: "LISTENING" });
   client.user.setPresence({
-    activities: [{ name: "$help", type: "LISTENING" }],
+    activities: [{ name: "$help", type: ActivityType.Listening }],
   });
 
   //Command channel
