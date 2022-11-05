@@ -421,7 +421,11 @@ async function sendReceipt(member, time, amount) {
         "\n\n*Commands typed in this DM will not work*"
     );
 
-  message = await member.member.send({ embeds: [embed] });
+  message = await member.member.send({ embeds: [embed] }).catch(err => {
+      console.log(member.member.user.id)
+      console.log(err)
+      return null
+  });
 }
 
 async function disableReceipts(msg) {
