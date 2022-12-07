@@ -16,10 +16,12 @@ async function addCurrency(m, amount) {
 
   let user = db.collection("wallets").doc(id);
   let aggregate_amount = amount;
+  let history = 0
 
   const doc = await user.get();
   if (doc.exists) {
     aggregate_amount += doc.data().currency;
+    history = doc.data().history + amount
     console.log(doc.data());
   }
 
@@ -28,6 +30,7 @@ async function addCurrency(m, amount) {
       userID: id,
       name: name,
       currency: aggregate_amount,
+      history: history
     })
     .then(() => {
       console.log("Document written successfully");

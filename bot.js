@@ -167,6 +167,7 @@ async function helpCommand(message) {
           "Guide to important channels. Use if you have questions or are new",
       },
       { name: "$wallet", value: "Tells you how many coins you have" },
+      { name: "$edit", value: "Allows you to edit/upgrade purchased <#820051777650556990> products" },
       {
         name: "$give <@recipient> <amount>",
         value: "Transfer coins to others. **Don't include <> on use**",
