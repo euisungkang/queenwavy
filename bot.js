@@ -371,11 +371,11 @@ async function calculateTimeSpent(oldMember, channelID) {
       amount = 0;
     }
 
-    if (await database.checkNotif(oldMember.member.user.id)) {
+    let succ = await database.addCurrency(oldMember.member.user, amount);
+
+    if (succ && await database.checkNotif(oldMember.member.user.id)) {
       sendReceipt(oldMember, diff, amount);
     }
-
-    await database.addCurrency(oldMember.member.user, amount);
   }
 }
 

@@ -20,6 +20,9 @@ async function addCurrency(m, amount) {
 
   const doc = await user.get();
   if (doc.exists) {
+    if (doc.data().name == "ALT ACCOUNT")
+      return false
+
     aggregate_amount += doc.data().currency;
     history = doc.data().history + amount
     console.log(doc.data());
@@ -38,6 +41,8 @@ async function addCurrency(m, amount) {
     .catch((err) => {
       console.log(err);
     });
+  
+  return true
 }
 
 async function setTimeJoined(m) {
