@@ -22,6 +22,8 @@ client.login(process.env.BOT_TOKEN_QW);
 client.on("ready", async () => {
   console.log("help im in heroku");
 
+  purgeAlts()
+
   // client.user.setActivity("$help", { type: "LISTENING" });
   client.user.setPresence({
     activities: [{ name: "$help", type: ActivityType.Listening }],
@@ -492,29 +494,18 @@ async function sendMessage(ID, message) {
   rec.send(message);
 }
 
-let alts = [
-  "772797231971041290",
-  "422931223552458764",
-  "799728810261086259",
-  "801683957556838421",
-  "808484429038092298",
-  "775501860123574322",
-  "161024271827599360",
-  "638887290751549443",
-  "485471519162499075",
-];
-
 async function purgeAlts() {
   // jinmoto2 : 422931223552458764
   // 102: 799728810261086259
   // kaon02: 801683957556838421
-  // Phone Sloth: 808484429038092298
+  // lil majima : 1029129814646476890
   // Haldoos : 775501860123574322
-  // nachomic: 161024271827599360
-  // lil majima : 638887290751549443
-  // Sedol: 485471519162499075
+  // Phone Sloth: 1054197359480942664
+  // nachomic: 906011068378275852
+
   // Yuji: 772797231971041290
-  for (let i = 0; i < alts.length; i++) {
-    database.purgeWallet(alts[i]);
-  }
+
+  //database.updateAlts(alts)
+
+  database.purgeAlts()
 }

@@ -134,21 +134,55 @@ async function removeCurrency(m, amount) {
     });
 }
 
-async function purgeWallet(id) {
+async function updateAlts(alts) {
+  let a = db.collection("meta").doc("users")
+  const doc = await a.get()
+
+  let newAlts = doc.data().alts
+  if (doc.exists)
+    for (const [key, value] of Object.entries(alts))
+      newAlts[key] = value
+
+  await a.update({
+    alts: newAlts
+  }).then(res => {
+    console.log("[DATABASE] Document written successfully: Alt Accounts")
+  }).catch(err => {
+    console.log(err)
+  })
+}
+
+async function purgeAlts() {
+  let users = db.collection("meta").doc("users")
+  const doc = await users.get()
+
+  let alts = doc.data().alts
+
+  if (!doc.exists)
+    return
+
   let name = "ALT ACCOUNT";
 
-  let user = db.collection("wallets").doc(id);
+  let user = db.collection("wallets")
 
-  await user
-    .set({
-      userID: id,
-      name: name,
-      currency: 0,
-      cum: 0,
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  for (const [key, value] of Object.entries(alts)) {
+    let alt = user.doc(value)
+
+    await alt
+      .set({
+        userID: value,
+        main: key,
+        name: name,
+        currency: 0,
+        cum: 0,
+        history: 0,
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  console.log("[DATABASE] Purged Alts")
 }
 
 async function getCurrency(id) {
@@ -364,7 +398,8 @@ async function resetMonthlyCoins() {
 module.exports = {
   addCurrency: addCurrency,
   removeCurrency: removeCurrency,
-  purgeWallet: purgeWallet,
+  updateAlts: updateAlts,
+  purgeAlts: purgeAlts,
   getCurrency: getCurrency,
   getCum: getCum,
   getRaffle: getRaffle,
@@ -384,4 +419,5 @@ module.exports = {
   enableReceipt: enableReceipt,
   checkNotif: checkNotif,
   resetMonthlyCoins: resetMonthlyCoins,
+
 };
