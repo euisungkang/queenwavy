@@ -62,6 +62,7 @@ async function setTimeJoined(m) {
         name: m.username,
         currency: 0,
         cum: 0,
+        history: 0,
         time: time,
       })
       .then(() => {
